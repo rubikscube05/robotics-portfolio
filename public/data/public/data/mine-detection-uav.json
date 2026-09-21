@@ -1,0 +1,127 @@
+{
+  "robot": "UAV-MINE",
+  "dataSource": "demo",
+  "duration": 30,
+  "telemetry": [
+    {
+      "time": 0,
+      "position": [
+        0,
+        0,
+        4
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 4,
+      "velocity": 0,
+      "heading": 0,
+      "state": "TAKEOFF"
+    },
+    {
+      "time": 5,
+      "position": [
+        2,
+        0,
+        6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 6,
+      "velocity": 0.8,
+      "heading": 0,
+      "state": "SEARCH"
+    },
+    {
+      "time": 10,
+      "position": [
+        5,
+        1,
+        6
+      ],
+      "rotation": [
+        0,
+        0,
+        0.2
+      ],
+      "altitude": 6,
+      "velocity": 0.7,
+      "heading": 0.2,
+      "state": "SEARCH"
+    },
+    {
+      "time": 15,
+      "position": [
+        8,
+        2,
+        6
+      ],
+      "rotation": [
+        0,
+        0,
+        0.3
+      ],
+      "altitude": 6,
+      "velocity": 0.7,
+      "heading": 0.3,
+      "state": "DETECTION"
+    },
+    {
+      "time": 20,
+      "position": [
+        10,
+        4,
+        6
+      ],
+      "rotation": [
+        0,
+        0,
+        0.5
+      ],
+      "altitude": 6,
+      "velocity": 0.6,
+      "heading": 0.5,
+      "state": "DETECTION"
+    },
+    {
+      "time": 25,
+      "position": [
+        8,
+        6,
+        5
+      ],
+      "rotation": [
+        0,
+        0,
+        1
+      ],
+      "altitude": 5,
+      "velocity": 0.7,
+      "heading": 1,
+      "state": "MARK"
+    },
+    {
+      "time": 30,
+      "position": [
+        5,
+        5,
+        1
+      ],
+      "rotation": [
+        0,
+        0,
+        1.8
+      ],
+      "altitude": 1,
+      "velocity": 0.5,
+      "heading": 1.8,
+      "state": "LANDING"
+    }
+  ],
+  "note": "Synthetic demo telemetry for website testing only. Not real flight data."
+}

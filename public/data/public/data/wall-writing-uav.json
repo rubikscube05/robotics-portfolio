@@ -1,0 +1,144 @@
+{
+  "robot": "UAV-WRITER",
+  "dataSource": "demo",
+  "duration": 26,
+  "telemetry": [
+    {
+      "time": 0,
+      "position": [
+        0,
+        0,
+        2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 2.5,
+      "velocity": 0,
+      "heading": 0,
+      "state": "HOVER"
+    },
+    {
+      "time": 4,
+      "position": [
+        0.5,
+        0,
+        2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 2.5,
+      "velocity": 0.2,
+      "heading": 0,
+      "state": "APPROACH"
+    },
+    {
+      "time": 8,
+      "position": [
+        1,
+        0,
+        2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 2.5,
+      "velocity": 0.15,
+      "heading": 0,
+      "state": "WRITE"
+    },
+    {
+      "time": 12,
+      "position": [
+        1.5,
+        0.2,
+        2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0.1
+      ],
+      "altitude": 2.5,
+      "velocity": 0.12,
+      "heading": 0.1,
+      "state": "WRITE"
+    },
+    {
+      "time": 16,
+      "position": [
+        1.5,
+        0.8,
+        2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5
+      ],
+      "altitude": 2.5,
+      "velocity": 0.12,
+      "heading": 1.5,
+      "state": "WRITE"
+    },
+    {
+      "time": 20,
+      "position": [
+        1,
+        1.2,
+        2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        2.2
+      ],
+      "altitude": 2.5,
+      "velocity": 0.14,
+      "heading": 2.2,
+      "state": "WRITE"
+    },
+    {
+      "time": 24,
+      "position": [
+        0.5,
+        1.2,
+        2.8
+      ],
+      "rotation": [
+        0,
+        0,
+        2.8
+      ],
+      "altitude": 2.8,
+      "velocity": 0.2,
+      "heading": 2.8,
+      "state": "RETRACT"
+    },
+    {
+      "time": 26,
+      "position": [
+        0,
+        1,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        3
+      ],
+      "altitude": 0.8,
+      "velocity": 0.25,
+      "heading": 3,
+      "state": "LANDING"
+    }
+  ],
+  "note": "Synthetic demo telemetry for website testing only. Not real flight data."
+}

@@ -1,0 +1,6 @@
+{
+  "robot": "UAV-01",
+  "dataSource": "real_flight",
+  "duration": 0,
+  "telemetry": []
+}

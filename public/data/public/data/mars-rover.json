@@ -1,0 +1,161 @@
+{
+  "robot": "MARS-ROVER",
+  "dataSource": "demo",
+  "duration": 32,
+  "telemetry": [
+    {
+      "time": 0,
+      "position": [
+        0,
+        0,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 0.12,
+      "velocity": 0,
+      "heading": 0,
+      "state": "IDLE"
+    },
+    {
+      "time": 4,
+      "position": [
+        0.5,
+        0.1,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0.05
+      ],
+      "altitude": 0.12,
+      "velocity": 0.15,
+      "heading": 0.05,
+      "state": "DRIVE"
+    },
+    {
+      "time": 8,
+      "position": [
+        1.2,
+        0.3,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0.1
+      ],
+      "altitude": 0.12,
+      "velocity": 0.18,
+      "heading": 0.1,
+      "state": "DRIVE"
+    },
+    {
+      "time": 12,
+      "position": [
+        2,
+        0.6,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0.15
+      ],
+      "altitude": 0.12,
+      "velocity": 0.2,
+      "heading": 0.15,
+      "state": "DRIVE"
+    },
+    {
+      "time": 16,
+      "position": [
+        2.7,
+        1,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0.25
+      ],
+      "altitude": 0.12,
+      "velocity": 0.18,
+      "heading": 0.25,
+      "state": "SCAN"
+    },
+    {
+      "time": 20,
+      "position": [
+        3.1,
+        1.5,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0.4
+      ],
+      "altitude": 0.12,
+      "velocity": 0.16,
+      "heading": 0.4,
+      "state": "SCAN"
+    },
+    {
+      "time": 24,
+      "position": [
+        3.3,
+        2,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0.7
+      ],
+      "altitude": 0.12,
+      "velocity": 0.14,
+      "heading": 0.7,
+      "state": "TURN"
+    },
+    {
+      "time": 28,
+      "position": [
+        2.7,
+        2.4,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        1.4
+      ],
+      "altitude": 0.12,
+      "velocity": 0.16,
+      "heading": 1.4,
+      "state": "RETURN"
+    },
+    {
+      "time": 32,
+      "position": [
+        2,
+        2.5,
+        0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        1.5
+      ],
+      "altitude": 0.12,
+      "velocity": 0.05,
+      "heading": 1.5,
+      "state": "IDLE"
+    }
+  ],
+  "note": "Synthetic demo telemetry for website testing only. Not real flight data."
+}

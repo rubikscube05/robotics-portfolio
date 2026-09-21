@@ -1,0 +1,127 @@
+{
+  "robot": "UAV-GESTURE",
+  "dataSource": "demo",
+  "duration": 24,
+  "telemetry": [
+    {
+      "time": 0,
+      "position": [
+        0,
+        0,
+        2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 2,
+      "velocity": 0,
+      "heading": 0,
+      "state": "READY"
+    },
+    {
+      "time": 4,
+      "position": [
+        1,
+        0,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 3,
+      "velocity": 0.6,
+      "heading": 0,
+      "state": "GESTURE_FORWARD"
+    },
+    {
+      "time": 8,
+      "position": [
+        3,
+        0,
+        4
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 4,
+      "velocity": 0.7,
+      "heading": 0,
+      "state": "GESTURE_FORWARD"
+    },
+    {
+      "time": 12,
+      "position": [
+        4,
+        2,
+        4
+      ],
+      "rotation": [
+        0,
+        0,
+        0.5
+      ],
+      "altitude": 4,
+      "velocity": 0.6,
+      "heading": 0.5,
+      "state": "GESTURE_RIGHT"
+    },
+    {
+      "time": 16,
+      "position": [
+        4,
+        4,
+        3.5
+      ],
+      "rotation": [
+        0,
+        0,
+        1
+      ],
+      "altitude": 3.5,
+      "velocity": 0.5,
+      "heading": 1,
+      "state": "GESTURE_RIGHT"
+    },
+    {
+      "time": 20,
+      "position": [
+        2,
+        4,
+        2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        2
+      ],
+      "altitude": 2.5,
+      "velocity": 0.5,
+      "heading": 2,
+      "state": "GESTURE_BACK"
+    },
+    {
+      "time": 24,
+      "position": [
+        0,
+        2,
+        0.5
+      ],
+      "rotation": [
+        0,
+        0,
+        2.8
+      ],
+      "altitude": 0.5,
+      "velocity": 0.3,
+      "heading": 2.8,
+      "state": "LANDING"
+    }
+  ],
+  "note": "Synthetic demo telemetry for website testing only. Not real flight data."
+}

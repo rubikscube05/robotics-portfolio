@@ -1,0 +1,110 @@
+{
+  "robot": "UAV-01",
+  "dataSource": "demo",
+  "duration": 20,
+  "telemetry": [
+    {
+      "time": 0,
+      "position": [
+        0,
+        0,
+        8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "altitude": 8,
+      "velocity": 0,
+      "heading": 0,
+      "state": "ARMED"
+    },
+    {
+      "time": 4,
+      "position": [
+        1,
+        2,
+        8.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0.2
+      ],
+      "altitude": 8.2,
+      "velocity": 1.2,
+      "heading": 0.2,
+      "state": "MISSION"
+    },
+    {
+      "time": 8,
+      "position": [
+        2,
+        4,
+        6
+      ],
+      "rotation": [
+        0,
+        0,
+        0.3
+      ],
+      "altitude": 6,
+      "velocity": 1,
+      "heading": 0.3,
+      "state": "APPROACH"
+    },
+    {
+      "time": 12,
+      "position": [
+        2.2,
+        4.2,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0.35
+      ],
+      "altitude": 3,
+      "velocity": 0.7,
+      "heading": 0.35,
+      "state": "LANDING"
+    },
+    {
+      "time": 16,
+      "position": [
+        2.2,
+        4.2,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0.35
+      ],
+      "altitude": 0.8,
+      "velocity": 0.25,
+      "heading": 0.35,
+      "state": "LANDING"
+    },
+    {
+      "time": 20,
+      "position": [
+        2.2,
+        4.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0.35
+      ],
+      "altitude": 0,
+      "velocity": 0,
+      "heading": 0.35,
+      "state": "LANDED"
+    }
+  ],
+  "note": "Synthetic demo telemetry for website testing only. Not real flight data."
+}
