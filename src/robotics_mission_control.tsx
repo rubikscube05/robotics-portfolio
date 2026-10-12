@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -20,6 +24,10 @@ import {
   X,
 } from "lucide-react";
 
+// Vite serves public/ under the configured base path (e.g. /robotics-portfolio/).
+// Prefixing keeps /models and /data URLs working in dev, preview and the deployed site.
+const assetUrl = (p: string) => `${import.meta.env.BASE_URL}${p.replace(/^\//, "")}`;
+
 /* ==========================================================================
    ROBOTICS MISSION CONTROL — DROP-IN SINGLE FILE
    - Demo telemetry is explicitly labeled DEMO SIMULATION.
@@ -28,7 +36,7 @@ import {
      remain clearly marked when they are not.
    ========================================================================== */
 
-type AppState =
+export type AppState =
   | "HERO"
   | "MISSION_CONTROL"
   | "MISSION_VIEW"
@@ -38,9 +46,9 @@ type AppState =
   | "STACK"
   | "ABOUT";
 
-type DataSource = "demo" | "real_flight" | "rosbag";
+export type DataSource = "demo" | "real_flight" | "rosbag";
 
-interface TelemetryPoint {
+export interface TelemetryPoint {
   time: number;
   position?: [number, number, number];
   rotation?: [number, number, number];
@@ -51,7 +59,7 @@ interface TelemetryPoint {
   joints?: Record<string, number>;
 }
 
-interface MissionData {
+export interface MissionData {
   mission: string;
   robot: string;
   dataSource: DataSource;
@@ -68,12 +76,13 @@ interface ProjectMedia {
 
 interface ProjectLinks {
   github?: string;
+  thingiverse?: string;
   docs?: string;
   video?: string;
   report?: string;
 }
 
-interface Project {
+export interface Project {
   id: string;
   title: string;
   category: string;
@@ -104,77 +113,103 @@ const DATA_SOURCE_LABELS: Record<DataSource, string> = {
  * They are deliberately not repeated here. Replace DATA NOT PROVIDED fields
  * with verified project information and real links when supplied.
  */
-const PROJECTS: Project[] = [
+export const PROJECTS: Project[] = [
   {
     id: "squid-robot",
-    title: "Bio-Inspired 3-Leg Squid Robot",
+    title: "IRON-SQUID — Triradial Tendon-Driven Robot",
     category: "Bio-Inspired Robotics",
-    status: "Prototype / Simulation",
+    status: "Simulation / Prototype",
     description:
-      "Three-legged bio-inspired robotic platform developed around coordinated leg motion and physical locomotion.",
-    objective: DATA_NOT_PROVIDED,
-    hardware: DATA_NOT_PROVIDED,
+      "ROS 2 + Gazebo framework for a triradial, tendon-driven robotic platform with three flexible tendon-actuated arms, custom inverse kinematics and Central Pattern Generator locomotion.",
+    objective:
+      "Investigate biomimetic omnidirectional locomotion using three flexible tendon-driven arms instead of conventional rigid robotic legs.",
+    hardware:
+      "Triradial platform: 3 radial arms × 20 sections, 120 controlled joints, 3 tendons per arm (9 tendon commands); fully parametric OpenSCAD geometry.",
     sensors: DATA_NOT_PROVIDED,
-    software: DATA_NOT_PROVIDED,
-    control: DATA_NOT_PROVIDED,
-    simulation: DATA_NOT_PROVIDED,
+    software:
+      "ROS 2 Jazzy, Gazebo Harmonic, procedural Python URDF generator, ros2_control (gz_ros2_control), OpenSCAD.",
+    control:
+      "Central Pattern Generator gait generator: /cmd_vel (geometry_msgs/Twist) → CPG → arm bending → tendon IK → 9 tendon commands; 30 Hz control loop, 1 Hz stroke.",
+    simulation:
+      "Gazebo Harmonic physics with separate single-arm and full-robot launch modes.",
     challenges: DATA_NOT_PROVIDED,
     model: "squid",
-    links: {},
+    links: {
+      github: "https://github.com/rubikscube05/iron-squid",
+    },
     media: {},
   },
   {
     id: "autonomous-landing",
-    title: "Autonomous Drone Landing",
+    title: "IRoC-U26 — Autonomous Mars Precision Landing",
     category: "Aerial Robotics",
-    status: "Development",
+    status: "Simulation",
     description:
-      "Autonomous UAV landing project with a replayable mission interface for recorded or simulated telemetry.",
-    objective: DATA_NOT_PROVIDED,
-    hardware: DATA_NOT_PROVIDED,
-    sensors: DATA_NOT_PROVIDED,
-    software: DATA_NOT_PROVIDED,
-    control: DATA_NOT_PROVIDED,
-    simulation: DATA_NOT_PROVIDED,
+      "Autonomous marker-based precision landing system built for the ISRO Robotics Challenge (IRoC-U 2026), landing a UAV on a simulated Martian surface using ArUco detection.",
+    objective:
+      "Achieve autonomous, vision-based precision landing on a designated marker from a moving aerial approach over Martian terrain.",
+    hardware:
+      "Iris quadrotor with a downward-facing gimbal camera; portable Docker-based simulation stack.",
+    sensors:
+      "Downward-facing gimbal camera feeding OpenCV-based ArUco marker detection for relative pose estimation.",
+    software:
+      "ROS 2 Humble, Gazebo Harmonic, ArduPilot SITL, MAVROS, ros_gz bridge, OpenCV, Docker.",
+    control:
+      "Adaptive PID precision-landing controller that converts detected marker pose into velocity setpoints streamed through MAVROS.",
+    simulation:
+      "Gazebo Harmonic Mars world with ArduPilot SITL and the Iris airframe.",
     challenges: DATA_NOT_PROVIDED,
     model: "drone",
-    links: {},
+    links: {
+      github: "https://github.com/rubikscube05/IRoC-U-26-precision-landing",
+    },
     media: {},
   },
   {
     id: "gps-drone",
-    title: "GPS Autonomous Drone",
+    title: "GPS-Denied Autonomous Navigation",
     category: "Autonomous Systems",
-    status: "Development",
+    status: "Simulation",
     description:
-      "Autonomous UAV navigation project represented through waypoint telemetry and mission replay.",
-    objective: DATA_NOT_PROVIDED,
-    hardware: DATA_NOT_PROVIDED,
-    sensors: DATA_NOT_PROVIDED,
-    software: DATA_NOT_PROVIDED,
-    control: DATA_NOT_PROVIDED,
-    simulation: DATA_NOT_PROVIDED,
+      "Simulation environment for GPS-denied autonomous navigation of a multi-agent drone fleet using a wireless mesh topology and vision-based perception.",
+    objective:
+      "Test autonomous multi-agent drone navigation without satellite positioning, relying on mesh communication and localized, camera-based perception.",
+    hardware:
+      "Three distinct simulated airframes (Marky, DeeDee, Joey) each carrying a Raspberry Pi Camera V2 payload.",
+    sensors:
+      "Raspberry Pi Camera Module V2 (forward/downward) plus simulated range sensing for relative localization.",
+    software:
+      "ROS 2 Jazzy, Gazebo Harmonic, ArduPilot SITL, MAVROS, ros_gz bridge, custom robofest ROS 2 package.",
+    control:
+      "Multi-MAVROS swarm launch with GPS_TYPE disabled in QGroundControl to force GPS-denied operation.",
+    simulation:
+      "robofest.sdf Gazebo world with an automated run_sim.sh boot sequence.",
     challenges: DATA_NOT_PROVIDED,
     model: "drone",
-    links: {},
+    links: {
+      github: "https://github.com/rubikscube05/GPS-denied",
+    },
     media: {},
   },
   {
     id: "swarm-coordination",
     title: "Multi-Drone Coordination / Drone Swarm",
     category: "Multi-Robot Systems",
-    status: "Development",
+    status: "Simulation",
     description:
-      "Multi-UAV coordination project presented as a mission-level formation and trajectory replay.",
-    objective: DATA_NOT_PROVIDED,
-    hardware: DATA_NOT_PROVIDED,
+      "Multi-UAV coordination project presented as a mission-level formation and trajectory replay across a mesh-networked fleet.",
+    objective:
+      "Explore coordinated multi-agent behaviour and mesh-topology communication across a fleet of simulated UAVs.",
+    hardware: "Fleet of simulated airframes sharing a wireless mesh topology.",
     sensors: DATA_NOT_PROVIDED,
-    software: DATA_NOT_PROVIDED,
-    control: DATA_NOT_PROVIDED,
-    simulation: DATA_NOT_PROVIDED,
+    software: "ROS 2 Jazzy, Gazebo Harmonic, ArduPilot SITL, MAVROS, ros_gz bridge.",
+    control: "Coordinated multi-agent launch and formation control across the fleet.",
+    simulation: "Shared Gazebo world with the multi-agent fleet.",
     challenges: DATA_NOT_PROVIDED,
     model: "drone",
-    links: {},
+    links: {
+      github: "https://github.com/rubikscube05/GPS-denied",
+    },
     media: {},
   },
   {
@@ -247,6 +282,74 @@ const PROJECTS: Project[] = [
     challenges: DATA_NOT_PROVIDED,
     model: "drone",
     links: {},
+    media: {},
+  },
+  {
+    id: "stratviz",
+    title: "StratViz — F1 Visual Analytics",
+    category: "Data Visualization",
+    status: "Completed",
+    description:
+      "Backend-free browser visual analytics app for Formula 1 data, with an interactive race replay, telemetry charts and season analysis powered by in-browser SQL.",
+    objective:
+      "Build a visual analytics web app that lets users explore F1 race and telemetry data entirely in the browser, without a backend server.",
+    hardware: "Runs fully client-side in a modern web browser.",
+    sensors: DATA_NOT_PROVIDED,
+    software: "JavaScript, DuckDB-WASM for in-browser SQL, D3 charts, HTML canvas rendering.",
+    control: DATA_NOT_PROVIDED,
+    simulation:
+      "Interactive replay and analysis over historical F1 Parquet datasets loaded client-side.",
+    challenges: DATA_NOT_PROVIDED,
+    links: {
+      github: "https://github.com/rubikscube05/StratViz",
+    },
+    media: {},
+  },
+  {
+    id: "compressive-strength-predictor",
+    title: "Concrete Compressive Strength Predictor",
+    category: "Machine Learning",
+    status: "Completed",
+    description:
+      "Machine-learning application that predicts concrete compressive strength from mix ingredients and curing age, implementing the algorithms from scratch.",
+    objective:
+      "Predict concrete compressive strength from composition and age, and compare from-scratch ML models through an interactive desktop interface.",
+    hardware: "Desktop application with a live graphical interface.",
+    sensors: DATA_NOT_PROVIDED,
+    software: "Python, NumPy, Pandas, Matplotlib and Tkinter — neural network, KNN and linear regression built from scratch.",
+    control: DATA_NOT_PROVIDED,
+    simulation:
+      "Trains and evaluates models on the UCI concrete compressive strength dataset with real-time input prediction.",
+    challenges: DATA_NOT_PROVIDED,
+    links: {
+      github: "https://github.com/rubikscube05/Compressive-Strength-Predictor",
+    },
+    media: {},
+  },
+  {
+    id: "long-distance-uav",
+    title: "Intelligent Long-Distance UAVs",
+    category: "Aerial Robotics",
+    status: "Design / Prototype",
+    objective:
+      "Design a compact, foldable, backpack-portable long-range UAV that combines centimetre-level RTK precision with high-speed obstacle avoidance and GPS-denied navigation.",
+    description:
+      "3D-printable hardware design for a long-endurance autonomous UAV platform blending RTK precision, 360° LiDAR obstacle avoidance and GPS-denied SLAM on a compact foldable frame.",
+    hardware:
+      "Compact foldable frame with high-tension arm locking to damp resonance; H7-class flight controller; 4S2P Li-ion pack (~5600–9000 mAh across eight high-discharge cells).",
+    sensors:
+      "M10 RTK GPS for centimetre accuracy, 360° 2D LiDAR (LD19 / RPLIDAR class) and Time-of-Flight sensors for obstacle avoidance and SLAM.",
+    software:
+      "ArduPilot or PX4 flight stack on an H7 flight controller, with SLAM for GPS-denied operation.",
+    control:
+      "PID control loops tuned to handle the increased inertia of the battery and LiDAR payload for precise autonomous braking and collision-free cruising.",
+    simulation: DATA_NOT_PROVIDED,
+    challenges:
+      "Balancing high energy density against real-time spatial processing while keeping the frame foldable and free of mechanical resonance.",
+    model: "drone",
+    links: {
+      thingiverse: "https://www.thingiverse.com/thing:7344739",
+    },
     media: {},
   },
 ];
@@ -369,7 +472,7 @@ const MISSION_META = [
   ["mission-08", "MINE DETECTION UAV", "mine-detection-uav", "UAV-01"],
 ] as const;
 
-function makeMission(index: number, demo: MissionData): MissionData & {
+export function makeMission(index: number, demo: MissionData): MissionData & {
   id: string;
   title: string;
   projectId: string;
@@ -387,9 +490,9 @@ function makeMission(index: number, demo: MissionData): MissionData & {
   };
 }
 
-const FALLBACK_MISSIONS = DEMO_MISSIONS.map((m, i) => makeMission(i, m));
+export const FALLBACK_MISSIONS = DEMO_MISSIONS.map((m, i) => makeMission(i, m));
 
-function interpolateTelemetry(data: TelemetryPoint[], time: number): TelemetryPoint | null {
+export function interpolateTelemetry(data: TelemetryPoint[], time: number): TelemetryPoint | null {
   if (!data.length) return null;
   if (time <= data[0].time) return data[0];
   if (time >= data[data.length - 1].time) return data[data.length - 1];
@@ -445,16 +548,309 @@ function disposeObject(root: THREE.Object3D) {
   });
 }
 
+/* --------------------------------------------------------------------------
+   Procedural textures (canvas-based, no external assets required)
+   -------------------------------------------------------------------------- */
+
+function makeCanvas(size: number, height = size) {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = height;
+  return { canvas, ctx: canvas.getContext("2d")! };
+}
+
+function createGlowTexture() {
+  const { canvas, ctx } = makeCanvas(128);
+  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gradient.addColorStop(0, "rgba(255,255,255,1)");
+  gradient.addColorStop(0.25, "rgba(255,255,255,0.7)");
+  gradient.addColorStop(0.6, "rgba(255,255,255,0.18)");
+  gradient.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 128, 128);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createGroundTexture() {
+  const { canvas, ctx } = makeCanvas(512);
+  ctx.fillStyle = "#2f5a33";
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Broad patches of drier / darker grass for large-scale variation.
+  for (let i = 0; i < 90; i += 1) {
+    const x = Math.random() * 512;
+    const y = Math.random() * 512;
+    const r = 24 + Math.random() * 70;
+    const dry = Math.random() > 0.5;
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+    if (dry) {
+      gradient.addColorStop(0, "rgba(150,140,74,0.28)");
+      gradient.addColorStop(1, "rgba(150,140,74,0)");
+    } else {
+      gradient.addColorStop(0, "rgba(20,46,26,0.32)");
+      gradient.addColorStop(1, "rgba(20,46,26,0)");
+    }
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Fine blade speckle.
+  for (let i = 0; i < 6000; i += 1) {
+    const x = Math.random() * 512;
+    const y = Math.random() * 512;
+    const r = 0.5 + Math.random() * 2.6;
+    const g = Math.random();
+    ctx.fillStyle = `rgba(${28 + g * 45}, ${74 + g * 80}, ${32 + g * 34}, 0.34)`;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Pebbles / bare soil dots.
+  for (let i = 0; i < 380; i += 1) {
+    const x = Math.random() * 512;
+    const y = Math.random() * 512;
+    const r = 0.8 + Math.random() * 2.2;
+    const s = 90 + Math.random() * 70;
+    ctx.fillStyle = `rgba(${s}, ${s - 8}, ${s - 22}, 0.5)`;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(22, 22);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
+function createGroundNormalTexture() {
+  const size = 256;
+  const { canvas, ctx } = makeCanvas(size);
+
+  // Fractal value noise used as a height field for the ground bumps.
+  const cells = 24;
+  const grid: number[][] = [];
+  for (let i = 0; i <= cells; i += 1) {
+    grid[i] = [];
+    for (let j = 0; j <= cells; j += 1) grid[i][j] = Math.random();
+  }
+  const sample = (u: number, v: number) => {
+    const mod = (n: number, m: number) => ((n % m) + m) % m;
+    const gx = u * cells;
+    const gy = v * cells;
+    const x0 = mod(Math.floor(gx), cells);
+    const y0 = mod(Math.floor(gy), cells);
+    const x1 = mod(x0 + 1, cells);
+    const y1 = mod(y0 + 1, cells);
+    const fx = gx - Math.floor(gx);
+    const fy = gy - Math.floor(gy);
+    const sx = fx * fx * (3 - 2 * fx);
+    const sy = fy * fy * (3 - 2 * fy);
+    const a = grid[x0][y0];
+    const b = grid[x1][y0];
+    const c = grid[x0][y1];
+    const d = grid[x1][y1];
+    return (a * (1 - sx) + b * sx) * (1 - sy) + (c * (1 - sx) + d * sx) * sy;
+  };
+  const height = (u: number, v: number) =>
+    sample(u, v) * 0.6 + sample(u * 2.3, v * 2.3) * 0.28 + sample(u * 4.9, v * 4.9) * 0.12;
+
+  const image = ctx.createImageData(size, size);
+  const strength = 1.6;
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const u = x / size;
+      const v = y / size;
+      const l = height((x - 1) / size, v);
+      const r = height((x + 1) / size, v);
+      const d = height(u, (y - 1) / size);
+      const t = height(u, (y + 1) / size);
+      let nx = (l - r) * strength;
+      let ny = (d - t) * strength;
+      let nz = 1;
+      const len = Math.hypot(nx, ny, nz);
+      nx /= len;
+      ny /= len;
+      nz /= len;
+      const idx = (y * size + x) * 4;
+      image.data[idx] = (nx * 0.5 + 0.5) * 255;
+      image.data[idx + 1] = (ny * 0.5 + 0.5) * 255;
+      image.data[idx + 2] = (nz * 0.5 + 0.5) * 255;
+      image.data[idx + 3] = 255;
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(22, 22);
+  texture.anisotropy = 4;
+  return texture;
+}
+
+function createGrassBladeTexture() {
+  const { canvas, ctx } = makeCanvas(64, 128);
+  ctx.clearRect(0, 0, 64, 128);
+
+  const drawBlade = (cx: number, w: number, h: number, hue: number) => {
+    const gradient = ctx.createLinearGradient(0, 128, 0, 128 - h);
+    gradient.addColorStop(0, `hsl(${hue}, 48%, 16%)`);
+    gradient.addColorStop(0.6, `hsl(${hue}, 58%, 34%)`);
+    gradient.addColorStop(1, `hsl(${hue}, 62%, 54%)`);
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(cx, 128);
+    ctx.quadraticCurveTo(cx - w, 128 - h * 0.5, cx - w * 0.3, 128 - h);
+    ctx.lineTo(cx + w * 0.3, 128 - h);
+    ctx.quadraticCurveTo(cx + w, 128 - h * 0.5, cx, 128);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  drawBlade(18, 9, 108, 104);
+  drawBlade(34, 11, 126, 112);
+  drawBlade(49, 8, 98, 96);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createGrassTuftGeometry() {
+  const geometry = new THREE.BufferGeometry();
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  const planes = 3;
+  const width = 0.16;
+  const height = 0.5;
+
+  for (let p = 0; p < planes; p += 1) {
+    const angle = (p / planes) * Math.PI;
+    const dx = (Math.cos(angle) * width) / 2;
+    const dz = (Math.sin(angle) * width) / 2;
+    const base = positions.length / 3;
+    positions.push(-dx, 0, -dz, dx, 0, dz, dx, height, dz, -dx, height, -dz);
+    uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
+    indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  }
+
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function createBarkTexture() {
+  const { canvas, ctx } = makeCanvas(64, 128);
+  ctx.fillStyle = "#8a6a44";
+  ctx.fillRect(0, 0, 64, 128);
+
+  for (let i = 0; i < 90; i += 1) {
+    const dark = Math.random() > 0.5;
+    ctx.strokeStyle = dark
+      ? `rgba(${52 + Math.random() * 34}, ${34 + Math.random() * 24}, ${16 + Math.random() * 14}, 0.6)`
+      : `rgba(${150 + Math.random() * 60}, ${116 + Math.random() * 40}, ${70 + Math.random() * 30}, 0.35)`;
+    ctx.lineWidth = 0.8 + Math.random() * 2.4;
+    const x = Math.random() * 64;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.bezierCurveTo(
+      x + (Math.random() - 0.5) * 12,
+      42,
+      x + (Math.random() - 0.5) * 12,
+      88,
+      x + (Math.random() - 0.5) * 8,
+      128
+    );
+    ctx.stroke();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 2);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createFoliageTexture() {
+  const { canvas, ctx } = makeCanvas(128);
+  ctx.fillStyle = "#4f8f3a";
+  ctx.fillRect(0, 0, 128, 128);
+
+  for (let i = 0; i < 2600; i += 1) {
+    const g = Math.random();
+    ctx.fillStyle = `rgba(${44 + g * 70}, ${104 + g * 100}, ${38 + g * 50}, 0.5)`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * 128, Math.random() * 128, 0.8 + Math.random() * 2.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(3, 3);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createCarbonTexture() {
+  const { canvas, ctx } = makeCanvas(64);
+  ctx.fillStyle = "#15181d";
+  ctx.fillRect(0, 0, 64, 64);
+
+  for (let y = 0; y < 64; y += 8) {
+    for (let x = 0; x < 64; x += 8) {
+      ctx.fillStyle = (x / 8 + y / 8) % 2 === 0 ? "#262b32" : "#0d0f12";
+      ctx.fillRect(x, y, 8, 8);
+    }
+  }
+  for (let i = 0; i < 1600; i += 1) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.05})`;
+    ctx.fillRect(Math.random() * 64, Math.random() * 64, 1, 1);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(3, 3);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createSunTexture() {
+  const { canvas, ctx } = makeCanvas(256);
+  const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gradient.addColorStop(0, "rgba(255,247,216,1)");
+  gradient.addColorStop(0.22, "rgba(255,224,150,0.95)");
+  gradient.addColorStop(0.5, "rgba(255,186,96,0.34)");
+  gradient.addColorStop(1, "rgba(255,170,80,0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 256, 256);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 function createGradientSky() {
-  const geometry = new THREE.SphereGeometry(220, 32, 16);
+  const geometry = new THREE.SphereGeometry(220, 40, 20);
   const material = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      top: { value: new THREE.Color("#2f6fa8") },
-      middle: { value: new THREE.Color("#91b9c7") },
-      horizon: { value: new THREE.Color("#f4a261") },
-      ground: { value: new THREE.Color("#20362a") },
+      top: { value: new THREE.Color("#3a3f77") },
+      middle: { value: new THREE.Color("#ff8f5a") },
+      horizon: { value: new THREE.Color("#ffc46b") },
+      ground: { value: new THREE.Color("#4a2e24") },
+      sunDir: { value: new THREE.Vector3(-65, 22, -110).normalize() },
+      sunColor: { value: new THREE.Color("#ffd28a") },
     },
     vertexShader: `
       varying vec3 vWorld;
@@ -469,12 +865,42 @@ function createGradientSky() {
       uniform vec3 middle;
       uniform vec3 horizon;
       uniform vec3 ground;
+      uniform vec3 sunDir;
+      uniform vec3 sunColor;
       varying vec3 vWorld;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(floor(p), vec2(12.9898, 78.233))) * 43758.5453);
+      }
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float a = hash(i);
+        float b = hash(i + vec2(1.0, 0.0));
+        float c = hash(i + vec2(0.0, 1.0));
+        float d = hash(i + vec2(1.0, 1.0));
+        return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+      }
+
       void main() {
-        float h = normalize(vWorld).y;
-        vec3 c = mix(horizon, middle, smoothstep(-0.10, 0.25, h));
-        c = mix(c, top, smoothstep(0.25, 0.85, h));
-        c = mix(ground, c, smoothstep(-0.18, -0.02, h));
+        vec3 dir = normalize(vWorld);
+        float h = dir.y;
+        vec3 c = mix(horizon, middle, smoothstep(-0.08, 0.30, h));
+        c = mix(c, top, smoothstep(0.28, 0.92, h));
+        c = mix(ground, c, smoothstep(-0.22, -0.02, h));
+
+        // Sun disc and its broad atmospheric scattering glow.
+        float sun = max(dot(dir, normalize(sunDir)), 0.0);
+        c += sunColor * pow(sun, 220.0) * 1.6;
+        c += sunColor * pow(sun, 8.0) * 0.32;
+        c += sunColor * pow(sun, 2.0) * 0.06;
+
+        // Layered haze so the sky is not a flat gradient.
+        float cloudBand = noise(dir.xz * 4.0 + dir.y * 3.0);
+        c += (cloudBand - 0.5) * 0.03 * smoothstep(0.02, 0.45, h);
+        float band = sin(h * 46.0 + vWorld.x * 0.02) * 0.5 + 0.5;
+        c += (band - 0.5) * 0.010 * smoothstep(0.0, 0.4, h);
         gl_FragColor = vec4(c, 1.0);
       }
     `,
@@ -488,71 +914,261 @@ function createCloudTexture() {
   canvas.height = 128;
   const ctx = canvas.getContext("2d")!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.filter = "blur(10px)";
-  ctx.fillStyle = "rgba(255,255,255,0.72)";
-  const blobs = [
-    [55, 70, 34], [90, 58, 42], [130, 65, 36], [165, 72, 28], [205, 68, 35],
+  ctx.filter = "blur(9px)";
+
+  // Stacked cumulus lobes, brighter on top, shaded underneath.
+  const lobes = [
+    [60, 74, 30], [92, 60, 38], [126, 54, 34], [158, 62, 36], [192, 72, 30],
+    [78, 82, 26], [110, 84, 30], [146, 82, 28], [178, 84, 24],
   ];
-  blobs.forEach(([x, y, r]) => {
+  lobes.forEach(([x, y, r], i) => {
+    const shade = i < 5 ? 0.9 : 0.78;
+    ctx.fillStyle = `rgba(255,255,255,${shade})`;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   });
-  return new THREE.CanvasTexture(canvas);
+
+  // Brighter sunlit highlights on the upper edges.
+  ctx.filter = "blur(6px)";
+  [[92, 46, 20], [126, 42, 18], [158, 48, 18]].forEach(([x, y, r]) => {
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
 }
 
 function createSun(scene: THREE.Scene) {
-  const geometry = new THREE.SphereGeometry(5, 24, 16);
-  const material = new THREE.MeshBasicMaterial({ color: 0xffd27d });
+  const position = new THREE.Vector3(150, 18, -95);
+
+  const geometry = new THREE.SphereGeometry(5, 32, 20);
+  const material = new THREE.MeshBasicMaterial({ color: 0xffa94d });
   const sun = new THREE.Mesh(geometry, material);
-  sun.position.set(-65, 22, -110);
+  sun.position.copy(position);
   scene.add(sun);
+
+  const glow = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: createSunTexture(),
+      color: 0xffc078,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      fog: false,
+    })
+  );
+  glow.position.copy(position);
+  glow.scale.set(46, 46, 1);
+  scene.add(glow);
+
   return sun;
 }
 
+const LANDING_PAD = { x: 15, z: -25 };
+
+function baseTerrain(x: number, z: number) {
+  return (
+    Math.sin(x * 0.03) * Math.cos(z * 0.035) * 0.62 +
+    Math.sin(x * 0.08 + z * 0.04) * 0.26 +
+    Math.cos(z * 0.1 - x * 0.02) * 0.17 +
+    Math.sin(x * 0.22) * Math.cos(z * 0.19) * 0.05
+  );
+}
+
+// Flattens the ground around the landing pad so it stays level.
+function terrainHeight(x: number, z: number) {
+  const padHeight = baseTerrain(LANDING_PAD.x, LANDING_PAD.z);
+  const distance = Math.hypot(x - LANDING_PAD.x, z - LANDING_PAD.z);
+  const blend = THREE.MathUtils.smoothstep(distance, 2.6, 7.5);
+  return THREE.MathUtils.lerp(padHeight, baseTerrain(x, z), blend);
+}
+
 function createGrass(scene: THREE.Scene) {
-  const geometry = new THREE.ConeGeometry(0.025, 0.24, 3);
+  const geometry = createGrassTuftGeometry();
   const material = new THREE.MeshStandardMaterial({
-    color: 0x2f5e34,
+    color: 0x8fae64,
+    map: createGrassBladeTexture(),
+    alphaTest: 0.45,
+    side: THREE.DoubleSide,
     roughness: 1,
     metalness: 0,
   });
-  const count = 850;
+  const count = 3200;
   const grass = new THREE.InstancedMesh(geometry, material, count);
   const dummy = new THREE.Object3D();
+  const tint = new THREE.Color();
 
   for (let i = 0; i < count; i += 1) {
     const x = (Math.random() - 0.5) * 150;
     const z = (Math.random() - 0.5) * 150;
-    const scale = 0.65 + Math.random() * 1.1;
-    dummy.position.set(x, 0.08 * Math.sin(x * 0.08) * Math.cos(z * 0.08), z);
+    const scale = 0.7 + Math.random() * 1.3;
+    dummy.position.set(x, terrainHeight(x, z) - 0.02, z);
     dummy.rotation.y = Math.random() * Math.PI;
-    dummy.scale.set(scale, scale, scale);
+    dummy.scale.set(scale, scale * (0.8 + Math.random() * 0.5), scale);
     dummy.updateMatrix();
     grass.setMatrixAt(i, dummy.matrix);
+    tint.setHSL(0.24 + Math.random() * 0.06, 0.34, 0.30 + Math.random() * 0.14);
+    grass.setColorAt(i, tint);
   }
   grass.instanceMatrix.needsUpdate = true;
+  if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
   grass.receiveShadow = true;
+  grass.castShadow = false;
   scene.add(grass);
   return grass;
 }
 
+function createStars(scene: THREE.Scene) {
+  const count = 1100;
+  const positions = new Float32Array(count * 3);
+  const radius = 190;
+
+  for (let i = 0; i < count; i += 1) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 0.85 + 0.1);
+    const r = radius * (0.82 + Math.random() * 0.18);
+    const sinPhi = Math.sin(phi);
+    positions[i * 3] = r * sinPhi * Math.cos(theta);
+    positions[i * 3 + 1] = Math.abs(r * Math.cos(phi)) + 18;
+    positions[i * 3 + 2] = r * sinPhi * Math.sin(theta);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 1.7,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.9,
+    depthWrite: false,
+    fog: false,
+  });
+  const stars = new THREE.Points(geometry, material);
+  stars.name = "stars";
+  scene.add(stars);
+  return stars;
+}
+
+function createTreeVariant() {
+  const group = new THREE.Group();
+  const barkMat = new THREE.MeshStandardMaterial({
+    color: 0x8a6a4a,
+    map: createBarkTexture(),
+    roughness: 0.95,
+  });
+  const foliageColors = [0x3f6b34, 0x467536, 0x365c2d];
+  const foliageMat = new THREE.MeshStandardMaterial({
+    color: foliageColors[Math.floor(Math.random() * foliageColors.length)],
+    map: createFoliageTexture(),
+    roughness: 0.92,
+    metalness: 0,
+  });
+
+  const trunkHeight = 3.6;
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.36, trunkHeight, 9), barkMat);
+  trunk.position.y = trunkHeight / 2;
+  trunk.castShadow = true;
+  trunk.receiveShadow = true;
+  group.add(trunk);
+
+  const up = new THREE.Vector3(0, 1, 0);
+  const branchCount = 6;
+  for (let i = 0; i < branchCount; i += 1) {
+    const angle = (i / branchCount) * Math.PI * 2 + Math.random() * 0.6;
+    const baseY = trunkHeight * (0.5 + Math.random() * 0.42);
+    const length = 1.3 + Math.random() * 1.1;
+    const dir = new THREE.Vector3(Math.cos(angle), 0.55 + Math.random() * 0.5, Math.sin(angle)).normalize();
+
+    const branchGeo = new THREE.CylinderGeometry(0.045, 0.1, length, 6);
+    branchGeo.translate(0, length / 2, 0);
+    const branch = new THREE.Mesh(branchGeo, barkMat);
+    branch.quaternion.setFromUnitVectors(up, dir);
+    branch.position.set(Math.cos(angle) * 0.08, baseY, Math.sin(angle) * 0.08);
+    branch.castShadow = true;
+    group.add(branch);
+
+    const tip = branch.position.clone().add(dir.multiplyScalar(length));
+    const blob = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.62 + Math.random() * 0.4, 1),
+      foliageMat
+    );
+    blob.position.copy(tip);
+    blob.castShadow = true;
+    blob.receiveShadow = true;
+    group.add(blob);
+  }
+
+  // Rounded canopy crown.
+  for (let i = 0; i < 4; i += 1) {
+    const blob = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.9 + Math.random() * 0.55, 1),
+      foliageMat
+    );
+    blob.position.set(
+      (Math.random() - 0.5) * 1.0,
+      trunkHeight * 0.92 + Math.random() * 1.0,
+      (Math.random() - 0.5) * 1.0
+    );
+    blob.castShadow = true;
+    blob.receiveShadow = true;
+    group.add(blob);
+  }
+
+  return group;
+}
+
+function createTrees(scene: THREE.Scene) {
+  const variants = [createTreeVariant(), createTreeVariant(), createTreeVariant()];
+  const group = new THREE.Group();
+
+  const count = 24;
+  let placed = 0;
+  let guard = 0;
+
+  while (placed < count && guard < count * 30) {
+    guard += 1;
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 26 + Math.random() * 55;
+    const x = Math.cos(angle) * dist;
+    const z = Math.sin(angle) * dist;
+    if (Math.hypot(x - LANDING_PAD.x, z - LANDING_PAD.z) < 8) continue;
+
+    const tree = variants[placed % variants.length].clone();
+    const scale = 0.85 + Math.random() * 1.15;
+    tree.scale.setScalar(scale);
+    tree.rotation.y = Math.random() * Math.PI * 2;
+    tree.position.set(x, terrainHeight(x, z) - 0.05, z);
+    group.add(tree);
+    placed += 1;
+  }
+
+  scene.add(group);
+  return { group };
+}
+
 function createField(scene: THREE.Scene) {
-  const geometry = new THREE.PlaneGeometry(180, 180, 80, 80);
+  const geometry = new THREE.PlaneGeometry(180, 180, 130, 130);
   const pos = geometry.attributes.position;
   for (let i = 0; i < pos.count; i += 1) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const z =
-      Math.sin(x * 0.045) * Math.cos(y * 0.05) * 0.22 +
-      Math.sin(x * 0.11 + y * 0.04) * 0.07;
-    pos.setZ(i, z);
+    const lx = pos.getX(i);
+    const ly = pos.getY(i);
+    // After the -90deg X rotation, local y maps to world -z.
+    pos.setZ(i, terrainHeight(lx, -ly));
   }
   geometry.computeVertexNormals();
 
   const material = new THREE.MeshStandardMaterial({
-    color: 0x315f36,
-    roughness: 0.92,
+    color: 0x5c854b,
+    map: createGroundTexture(),
+    normalMap: createGroundNormalTexture(),
+    normalScale: new THREE.Vector2(0.8, 0.8),
+    roughness: 0.96,
     metalness: 0,
   });
   const field = new THREE.Mesh(geometry, material);
@@ -564,7 +1180,7 @@ function createField(scene: THREE.Scene) {
 
 function createLandingPad(scene: THREE.Scene) {
   const group = new THREE.Group();
-  group.position.set(15, 0.08, -25);
+  group.position.set(LANDING_PAD.x, terrainHeight(LANDING_PAD.x, LANDING_PAD.z) + 0.06, LANDING_PAD.z);
 
   const outer = new THREE.Mesh(
     new THREE.CylinderGeometry(2.2, 2.2, 0.08, 48),
@@ -596,58 +1212,196 @@ function createLandingPad(scene: THREE.Scene) {
 function createPlaceholderDrone() {
   const group = new THREE.Group();
 
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.75, 0.18, 0.5),
-    new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.6, roughness: 0.3 })
-  );
-  body.castShadow = true;
-  group.add(body);
-
-  const armMat = new THREE.MeshStandardMaterial({ color: 0x374151, metalness: 0.65, roughness: 0.32 });
-  const propMat = new THREE.MeshStandardMaterial({
-    color: 0xe5e7eb,
-    transparent: true,
-    opacity: 0.72,
-    roughness: 0.45,
+  const carbon = createCarbonTexture();
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: 0x2a2f37,
+    map: carbon,
+    metalness: 0.55,
+    roughness: 0.42,
   });
+  const motorMat = new THREE.MeshStandardMaterial({ color: 0xb7c0cb, metalness: 0.92, roughness: 0.26 });
+  const motorTopMat = new THREE.MeshStandardMaterial({ color: 0x40464e, metalness: 0.85, roughness: 0.34 });
+  const propMat = new THREE.MeshStandardMaterial({
+    color: 0xd7dde3,
+    transparent: true,
+    opacity: 0.62,
+    roughness: 0.4,
+    metalness: 0.1,
+    side: THREE.DoubleSide,
+  });
+  const caseMat = new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.35, roughness: 0.55 });
+  const lensMat = new THREE.MeshStandardMaterial({ color: 0x0b0f14, metalness: 0.7, roughness: 0.12 });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x22303d,
+    metalness: 0.4,
+    roughness: 0.05,
+    emissive: 0x0b1a26,
+    emissiveIntensity: 0.5,
+  });
+  const navGreenMat = new THREE.MeshStandardMaterial({
+    color: 0x22c55e,
+    emissive: 0x22c55e,
+    emissiveIntensity: 1.3,
+    roughness: 0.4,
+  });
+  const navRedMat = new THREE.MeshStandardMaterial({
+    color: 0xef4444,
+    emissive: 0xef4444,
+    emissiveIntensity: 1.3,
+    roughness: 0.4,
+  });
+  const strobeMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.4,
+    roughness: 0.3,
+  });
+  const glowTexture = createGlowTexture();
+  const makeGlow = (color: number, size: number) => {
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: glowTexture,
+        color,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    sprite.scale.setScalar(size);
+    return sprite;
+  };
 
-  const props: THREE.Mesh[] = [];
-  const offsets = [
-    [0.62, 0.42],
-    [-0.62, 0.42],
-    [0.62, -0.42],
-    [-0.62, -0.42],
+  // Bottom and top carbon plates.
+  const bottom = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.03, 0.62), frameMat);
+  bottom.position.y = -0.02;
+  bottom.castShadow = true;
+  bottom.receiveShadow = true;
+  group.add(bottom);
+
+  const top = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.03, 0.46), frameMat);
+  top.position.set(0, 0.12, -0.03);
+  top.castShadow = true;
+  group.add(top);
+
+  // Four arms, motors and tri-blade props in an X frame.
+  const props: THREE.Object3D[] = [];
+  const corners: [number, number][] = [
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1],
   ];
 
-  offsets.forEach(([x, z], i) => {
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.07, 0.07), armMat);
-    arm.position.set(x * 0.48, 0, z * 0.48);
-    arm.rotation.y = i % 2 === 0 ? 0.62 : -0.62;
+  corners.forEach(([sx, sz]) => {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.028, 0.06), frameMat);
+    arm.position.set(sx * 0.21, 0.02, sz * 0.21);
+    arm.rotation.y = Math.atan2(-sz, sx);
     arm.castShadow = true;
     group.add(arm);
 
-    const motor = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.075, 0.075, 0.1, 16),
-      armMat
-    );
-    motor.position.set(x, 0.05, z);
+    const mx = sx * 0.44;
+    const mz = sz * 0.44;
+
+    const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.064, 0.09, 20), motorMat);
+    motor.position.set(mx, 0.06, mz);
     motor.castShadow = true;
     group.add(motor);
 
-    const prop = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.015, 0.055), propMat);
-    prop.position.set(x, 0.12, z);
+    const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.028, 20), motorTopMat);
+    bell.position.set(mx, 0.115, mz);
+    group.add(bell);
+
+    const prop = new THREE.Group();
+    for (let b = 0; b < 3; b += 1) {
+      const holder = new THREE.Group();
+      holder.rotation.y = (b / 3) * Math.PI * 2;
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.006, 0.05), propMat);
+      blade.position.set(0.14, 0, 0);
+      blade.rotation.z = 0.22;
+      holder.add(blade);
+      prop.add(holder);
+    }
+    prop.position.set(mx, 0.135, mz);
     group.add(prop);
     props.push(prop);
+
+    // Navigation lights: green to starboard (+x), red to port (-x).
+    const navMat = sx > 0 ? navGreenMat : navRedMat;
+    const navColor = sx > 0 ? 0x22c55e : 0xef4444;
+    const led = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.016, 0.02), navMat);
+    led.position.set(sx * 0.2, 0.035, sz * 0.2);
+    group.add(led);
+
+    const ledGlow = makeGlow(navColor, 0.34);
+    ledGlow.position.copy(led.position);
+    group.add(ledGlow);
   });
 
-  const marker = new THREE.Mesh(
-    new THREE.BoxGeometry(0.16, 0.08, 0.22),
-    new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.4 })
-  );
-  marker.position.y = -0.13;
-  group.add(marker);
+  // FPV camera at the front (+z), tilted slightly upward.
+  const camMount = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.13, 0.06), frameMat);
+  camMount.position.set(0, 0.07, 0.2);
+  camMount.castShadow = true;
+  group.add(camMount);
 
-  return { group, props };
+  const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.05), lensMat);
+  camBody.position.set(0, 0.08, 0.26);
+  camBody.rotation.x = -0.4;
+  group.add(camBody);
+
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.034, 0.05, 20), glassMat);
+  lens.rotation.x = Math.PI / 2 - 0.4;
+  lens.position.set(0, 0.095, 0.3);
+  group.add(lens);
+
+  // Li-ion battery pack and strap on top.
+  const battery = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.11, 0.36), caseMat);
+  battery.position.set(0, 0.2, -0.06);
+  battery.castShadow = true;
+  group.add(battery);
+
+  const strap = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.12, 0.05), frameMat);
+  strap.position.set(0, 0.2, 0.02);
+  group.add(strap);
+
+  // Rear VTX antenna.
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.18, 10), caseMat);
+  antenna.position.set(0, 0.31, -0.18);
+  antenna.rotation.x = 0.45;
+  group.add(antenna);
+  const antennaTip = new THREE.Mesh(
+    new THREE.SphereGeometry(0.024, 12, 10),
+    new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 })
+  );
+  antennaTip.position.set(0, 0.395, -0.23);
+  group.add(antennaTip);
+
+  // Landing skids.
+  [-1, 1].forEach((sx) => {
+    const skid = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.1, 0.52), frameMat);
+    skid.position.set(sx * 0.12, -0.075, -0.02);
+    skid.castShadow = true;
+    group.add(skid);
+  });
+
+  // Anti-collision beacon on the battery with a soft glow.
+  const strobe = new THREE.Mesh(new THREE.SphereGeometry(0.028, 12, 10), strobeMat);
+  strobe.position.set(0, 0.28, -0.06);
+  group.add(strobe);
+  const strobeGlow = makeGlow(0xffffff, 0.5);
+  strobeGlow.position.copy(strobe.position);
+  group.add(strobeGlow);
+
+  // Navigation lights: green to starboard, red to port (real point lights so
+  // the frame and ground pick up the colour too).
+  const greenLight = new THREE.PointLight(0x22c55e, 1.4, 4.5, 2);
+  greenLight.position.set(0.3, 0.08, 0);
+  group.add(greenLight);
+  const redLight = new THREE.PointLight(0xef4444, 1.4, 4.5, 2);
+  redLight.position.set(-0.3, 0.08, 0);
+  group.add(redLight);
+
+  return { group, props, leds: { navGreenMat, navRedMat, strobeMat } };
 }
 
 function createPlaceholderSquid() {
@@ -724,6 +1478,258 @@ function createPlaceholderRover() {
   return { group, wheels };
 }
 
+function createUGV() {
+  const group = new THREE.Group();
+
+  const hullMat = new THREE.MeshStandardMaterial({ color: 0x5b6b4a, metalness: 0.35, roughness: 0.6 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x2b303a, metalness: 0.6, roughness: 0.4 });
+  const accentMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.4, roughness: 0.5 });
+  const ledMat = new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x34d399, emissiveIntensity: 1.2 });
+
+  const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.34, 1.7), hullMat);
+  chassis.position.y = 0.5;
+  chassis.castShadow = true;
+  chassis.receiveShadow = true;
+  group.add(chassis);
+
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.12, 1.2), darkMat);
+  deck.position.set(0, 0.72, -0.1);
+  group.add(deck);
+
+  // Sensor mast with spinning lidar drum.
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.55, 10), darkMat);
+  mast.position.set(0, 1.02, 0.45);
+  group.add(mast);
+  const lidar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.14, 16), accentMat);
+  lidar.position.set(0, 1.34, 0.45);
+  lidar.castShadow = true;
+  group.add(lidar);
+  const lidarCap = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.03, 16), darkMat);
+  lidarCap.position.set(0, 1.42, 0.45);
+  group.add(lidarCap);
+
+  // Front sensor bar.
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.1), darkMat);
+  bar.position.set(0, 0.66, 0.86);
+  group.add(bar);
+  [-0.28, 0, 0.28].forEach((x) => {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.03), ledMat);
+    eye.position.set(x, 0.66, 0.92);
+    group.add(eye);
+  });
+
+  // Antenna.
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.4, 8), darkMat);
+  antenna.position.set(-0.45, 0.95, -0.5);
+  antenna.rotation.z = 0.2;
+  group.add(antenna);
+
+  // Six wheels.
+  const wheels: THREE.Mesh[] = [];
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1d1f24, roughness: 0.85 });
+  [-0.72, 0, 0.72].forEach((z) => {
+    [-0.68, 0.68].forEach((x) => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 18), wheelMat);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.position.set(x, 0.3, z);
+      wheel.castShadow = true;
+      group.add(wheel);
+      wheels.push(wheel);
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.22, 12), accentMat);
+      hub.rotation.z = Math.PI / 2;
+      hub.position.set(x, 0.3, z);
+      group.add(hub);
+    });
+  });
+
+  return { group, wheels };
+}
+
+function createRocket() {
+  const group = new THREE.Group();
+  const shellMat = new THREE.MeshStandardMaterial({ color: 0xe8ecf1, metalness: 0.55, roughness: 0.35 });
+  const bandMat = new THREE.MeshStandardMaterial({ color: 0xc0392b, metalness: 0.5, roughness: 0.4 });
+  const noseMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, metalness: 0.45, roughness: 0.35 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x2a2f37, metalness: 0.8, roughness: 0.3 });
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: 0.9 });
+
+  // Rocket body points forward (+z); tail/nozzle is at -z.
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 1.9, 20), shellMat);
+  body.rotation.x = Math.PI / 2;
+  body.castShadow = true;
+  group.add(body);
+
+  // Ogive nose cone.
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.72, 20), noseMat);
+  nose.rotation.x = Math.PI / 2;
+  nose.position.z = 1.31;
+  nose.castShadow = true;
+  group.add(nose);
+  const noseTip = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), darkMat);
+  noseTip.position.z = 1.66;
+  group.add(noseTip);
+
+  // Painted bands.
+  [-0.35, 0.35].forEach((z) => {
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.178, 0.178, 0.16, 20), bandMat);
+    band.rotation.x = Math.PI / 2;
+    band.position.z = z;
+    group.add(band);
+  });
+
+  // Four swept fins around the tail.
+  for (let i = 0; i < 4; i += 1) {
+    const fin = new THREE.Group();
+    fin.rotation.z = (i / 4) * Math.PI * 2;
+    const finShape = new THREE.Shape();
+    finShape.moveTo(0, 0.5);
+    finShape.lineTo(0, -0.95);
+    finShape.lineTo(0.42, -0.95);
+    finShape.lineTo(0.3, 0.05);
+    finShape.closePath();
+    const finMesh = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(finShape, { depth: 0.03, bevelEnabled: false }),
+      bandMat
+    );
+    finMesh.rotation.y = Math.PI / 2;
+    finMesh.position.set(0.14, 0, -0.25);
+    finMesh.castShadow = true;
+    fin.add(finMesh);
+    group.add(fin);
+  }
+
+  // Engine nozzle.
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.23, 0.3, 20, 1, true), darkMat);
+  nozzle.rotation.x = Math.PI / 2;
+  nozzle.position.z = -1.08;
+  group.add(nozzle);
+
+  // Exhaust flame with a bright core.
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.1, 14), flameMat);
+  flame.rotation.x = Math.PI / 2;
+  flame.position.z = -1.85;
+  group.add(flame);
+  const flameCore = new THREE.Mesh(
+    new THREE.ConeGeometry(0.08, 0.7, 10),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+  );
+  flameCore.rotation.x = Math.PI / 2;
+  flameCore.position.z = -1.65;
+  group.add(flameCore);
+
+  return { group, flame };
+}
+
+function createHexapod() {
+  const group = new THREE.Group();
+  const carbon = createCarbonTexture();
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0x2b303a, map: carbon, metalness: 0.6, roughness: 0.4 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3a414b, metalness: 0.5, roughness: 0.5 });
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 0.9, roughness: 0.28 });
+  const servoMat = new THREE.MeshStandardMaterial({ color: 0x1f242b, metalness: 0.7, roughness: 0.4 });
+  const eyeMat = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 1.4 });
+  const rubberMat = new THREE.MeshStandardMaterial({ color: 0x14171c, roughness: 0.9 });
+
+  // Stacked chassis plates with standoffs.
+  const topPlate = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.06, 1.2), plateMat);
+  topPlate.position.y = 0.62;
+  topPlate.castShadow = true;
+  topPlate.receiveShadow = true;
+  group.add(topPlate);
+
+  const bottomPlate = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.06, 1.2), plateMat);
+  bottomPlate.position.y = 0.44;
+  bottomPlate.castShadow = true;
+  group.add(bottomPlate);
+
+  [
+    [-0.36, -0.5],
+    [0.36, -0.5],
+    [-0.36, 0.5],
+    [0.36, 0.5],
+  ].forEach(([sx, sz]) => {
+    const standoff = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.18, 8), metalMat);
+    standoff.position.set(sx, 0.53, sz);
+    group.add(standoff);
+  });
+
+  const core = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.24, 0.8), bodyMat);
+  core.position.y = 0.53;
+  core.castShadow = true;
+  group.add(core);
+
+  const battery = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.14, 0.34),
+    new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.6 })
+  );
+  battery.position.set(0, 0.72, -0.15);
+  group.add(battery);
+
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), bodyMat);
+  dome.position.set(0, 0.66, 0.35);
+  group.add(dome);
+
+  const cam = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.1, 0.1), servoMat);
+  cam.position.set(0, 0.6, 0.62);
+  group.add(cam);
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 14), eyeMat);
+  lens.rotation.x = Math.PI / 2;
+  lens.position.set(0, 0.6, 0.68);
+  group.add(lens);
+
+  // Six three-segment legs (coxa / femur / tibia).
+  const legs: { side: number; hip: THREE.Group; femur: THREE.Group; tibia: THREE.Group }[] = [];
+  const zs = [-0.45, 0, 0.45];
+  [-1, 1].forEach((side) => {
+    zs.forEach((z) => {
+      const hip = new THREE.Group();
+      hip.position.set(side * 0.45, 0.55, z);
+      group.add(hip);
+
+      const coxa = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.14, 14), servoMat);
+      coxa.rotation.z = Math.PI / 2;
+      coxa.position.x = side * 0.09;
+      coxa.castShadow = true;
+      hip.add(coxa);
+
+      const femur = new THREE.Group();
+      femur.position.x = side * 0.18;
+      hip.add(femur);
+
+      const femurServo = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.16, 12), metalMat);
+      femurServo.rotation.z = Math.PI / 2;
+      femurServo.position.x = side * 0.02;
+      femur.add(femurServo);
+
+      const femurMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.12), bodyMat);
+      femurMesh.position.x = side * 0.25;
+      femurMesh.castShadow = true;
+      femur.add(femurMesh);
+
+      const tibia = new THREE.Group();
+      tibia.position.x = side * 0.5;
+      femur.add(tibia);
+
+      const knee = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.14, 12), servoMat);
+      knee.rotation.z = Math.PI / 2;
+      tibia.add(knee);
+
+      const tibiaMesh = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), metalMat);
+      tibiaMesh.position.y = -0.25;
+      tibiaMesh.castShadow = true;
+      tibia.add(tibiaMesh);
+
+      const foot = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), rubberMat);
+      foot.position.y = -0.5;
+      tibia.add(foot);
+
+      legs.push({ side, hip, femur, tibia });
+    });
+  });
+
+  return { group, legs };
+}
+
 function loadLocalModel(url: string, loader: GLTFLoader, onLoaded: (root: THREE.Object3D) => void, onMissing: () => void) {
   loader.load(
     url,
@@ -754,7 +1760,7 @@ interface SceneProps {
   engineeringMode: boolean;
 }
 
-function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps) {
+export function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const liveRef = useRef({ appState, mission, time, engineeringMode });
 
@@ -767,8 +1773,8 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     if (!mount) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x7899ad);
-    scene.fog = new THREE.FogExp2(0xb6b8aa, 0.0065);
+    scene.background = new THREE.Color(0xf0a06b);
+    scene.fog = new THREE.FogExp2(0xd98c5e, 0.0032);
 
     const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 500);
     camera.position.set(15, 7, 23);
@@ -779,11 +1785,19 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 1.15;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     mount.appendChild(renderer.domElement);
+
+    // Bloom + filmic output pass for a less "cartoon" look.
+    const composer = new EffectComposer(renderer);
+    composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.55, 0.82);
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
 
     const resize = () => {
       const width = mount.clientWidth || window.innerWidth;
@@ -791,6 +1805,7 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
       camera.aspect = width / Math.max(height, 1);
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
+      composer.setSize(width, height);
     };
     resize();
     window.addEventListener("resize", resize);
@@ -798,14 +1813,15 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     const sky = createGradientSky();
     scene.add(sky);
     createSun(scene);
+    const stars = createStars(scene);
 
-    const ambient = new THREE.AmbientLight(0xffead5, 0.72);
+    const ambient = new THREE.AmbientLight(0xffe3c2, 1.1);
     scene.add(ambient);
 
-    const hemi = new THREE.HemisphereLight(0xa8c7df, 0x203b2a, 1.25);
+    const hemi = new THREE.HemisphereLight(0xffb27a, 0x4a342c, 1.1);
     scene.add(hemi);
 
-    const sunLight = new THREE.DirectionalLight(0xffbd72, 3.0);
+    const sunLight = new THREE.DirectionalLight(0xffca9a, 5.5);
     sunLight.position.set(-45, 55, -70);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.set(1536, 1536);
@@ -820,6 +1836,7 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     createField(scene);
     createGrass(scene);
     createLandingPad(scene);
+    const trees = createTrees(scene);
 
     // Local, replaceable cloud assets are intentionally not required.
     const cloudTexture = createCloudTexture();
@@ -827,14 +1844,21 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
       map: cloudTexture,
       transparent: true,
       depthWrite: false,
-      opacity: 0.44,
+      opacity: 0.5,
     });
     const cloudGroup = new THREE.Group();
     [
-      [-35, 28, -75, 18],
-      [10, 33, -95, 25],
-      [42, 24, -65, 15],
-      [-8, 27, -50, 13],
+      [-35, 28, -75, 20],
+      [10, 33, -95, 27],
+      [42, 24, -65, 16],
+      [-8, 27, -50, 14],
+      [65, 30, -40, 22],
+      [-70, 26, -30, 19],
+      [25, 38, -120, 30],
+      [-45, 35, -110, 24],
+      [80, 28, -90, 18],
+      [-20, 22, -25, 12],
+      [55, 34, -15, 17],
     ].forEach(([x, y, z, scale]) => {
       const sprite = new THREE.Sprite(cloudMaterial);
       sprite.position.set(x, y, z);
@@ -860,6 +1884,111 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     roverGroup.visible = false;
     scene.add(roverGroup);
 
+    // Hero drone flock: multiple UAVs flying together in formation.
+    const flockGroup = new THREE.Group();
+    flockGroup.visible = false;
+    scene.add(flockGroup);
+
+    const FLOCK_FORMATION: [number, number, number][] = [
+      [0, 0, 0],
+      [2.4, 0.15, 0.4],
+      [-2.4, 0.15, 0.4],
+      [1.2, 0.3, 2.0],
+      [-1.2, 0.3, 2.0],
+      [0, 0.5, -1.9],
+      [3.6, 0.35, -0.6],
+    ];
+    const flockUnits = FLOCK_FORMATION.map((offset) => {
+      const drone = createPlaceholderDrone();
+      flockGroup.add(drone.group);
+      return {
+        group: drone.group,
+        props: drone.props,
+        leds: drone.leds,
+        offset: new THREE.Vector3(...offset),
+      };
+    });
+
+    // Hero UGV patrolling the field.
+    const ugv = createUGV();
+    const ugvGroup = ugv.group;
+    ugvGroup.visible = false;
+    scene.add(ugvGroup);
+
+    // Hero interceptor that launches up and takes down the drone flock.
+    // Tries the drone model first (a real quad interceptor instead of the
+    // rocket fallback), then the user-supplied interceptor part, then a
+    // procedural fallback keeps the scene rendering.
+    const interceptorFallback = createRocket();
+    const interceptorGroup = new THREE.Group();
+    interceptorGroup.add(interceptorFallback.group);
+    interceptorGroup.visible = false;
+    scene.add(interceptorGroup);
+
+    const adoptInterceptorModel = (root: THREE.Object3D) => {
+      root.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          m.castShadow = true;
+          m.receiveShadow = true;
+        }
+      });
+      interceptorGroup.add(root);
+      // Re-scale so the downloaded model is ~1.4 m across the widest axis and
+      // centered on its origin, regardless of how it was exported.
+      const box = new THREE.Box3().setFromObject(root);
+      const size = box.getSize(new THREE.Vector3());
+      const span = Math.max(size.x, Math.max(size.y, size.z)) || 1;
+      root.scale.setScalar(1.4 / span);
+      box.setFromObject(root);
+      const center = box.getCenter(new THREE.Vector3());
+      root.position.sub(center);
+      interceptorFallback.group.visible = false;
+    };
+
+    // Hero interceptor that launches up and takes down the drone flock.
+    // Tries the ODIN Win Hit tailsitter first, then the v6 scout drone, the
+    // base-plate part, and finally a procedural fallback keeps the scene
+    // rendering.
+    loadLocalModel(assetUrl("models/interceptor.glb"), loader, adoptInterceptorModel, () => {
+      loadLocalModel(assetUrl("models/drone.glb"), loader, adoptInterceptorModel, () => {
+        loadLocalModel(assetUrl("models/interceptor.gltf"), loader, adoptInterceptorModel, () => {});
+      });
+    });
+
+    // Blinking red beacon on the interceptor (added to the group so it shows
+    // regardless of which model — GLB or fallback — is currently loaded).
+    const interceptorBeaconMat = new THREE.MeshStandardMaterial({
+      color: 0xff2222,
+      emissive: 0xff2222,
+      emissiveIntensity: 2,
+    });
+    const interceptorBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 10), interceptorBeaconMat);
+    interceptorBeacon.position.set(0, 0.2, 0.3);
+    interceptorGroup.add(interceptorBeacon);
+    const interceptorBeaconGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: createGlowTexture(),
+        color: 0xff2222,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    interceptorBeaconGlow.scale.setScalar(0.9);
+    interceptorBeaconGlow.position.copy(interceptorBeacon.position);
+    interceptorGroup.add(interceptorBeaconGlow);
+    const interceptorBeaconLight = new THREE.PointLight(0xff2222, 4, 10, 2);
+    interceptorBeaconLight.position.copy(interceptorBeacon.position);
+    interceptorGroup.add(interceptorBeaconLight);
+
+    // Hero walking hexapod.
+    const hexapod = createHexapod();
+    const hexapodGroup = hexapod.group;
+    hexapodGroup.visible = false;
+    scene.add(hexapodGroup);
+
     const loadedModels = new THREE.Group();
     scene.add(loadedModels);
 
@@ -868,7 +1997,7 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     let roverModel: THREE.Object3D | null = null;
 
     loadLocalModel(
-      "/models/drone.glb",
+      assetUrl("models/drone.glb"),
       loader,
       (root) => {
         droneModel = root;
@@ -887,7 +2016,7 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     );
 
     loadLocalModel(
-      "/models/squid.glb",
+      assetUrl("models/squid.glb"),
       loader,
       (root) => {
         squidModel = root;
@@ -906,7 +2035,7 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
     );
 
     loadLocalModel(
-      "/models/rover.glb",
+      assetUrl("models/rover.glb"),
       loader,
       (root) => {
         roverModel = root;
@@ -988,8 +2117,8 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
         ? interpolateTelemetry(activeMission.telemetry, state.time)
         : null;
 
-      const droneVisible = hero || (state.appState !== "CASE_STUDY" && type === "drone");
-      const squidVisible = hero || (state.appState !== "CASE_STUDY" && type === "squid");
+      const droneVisible = !hero && state.appState !== "CASE_STUDY" && type === "drone";
+      const squidVisible = !hero && state.appState !== "CASE_STUDY" && type === "squid";
       const roverVisible = !hero && state.appState !== "CASE_STUDY" && type === "rover";
 
       const applyVisibility = (
@@ -1028,6 +2157,10 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
           dronePlaceholder.props.forEach((prop, i) => {
             prop.rotation.y += (spinning ? 42 : 0) * dt * (i % 2 === 0 ? 1 : -1);
           });
+          const navPhase = Math.sin(state.time * 4);
+          dronePlaceholder.leds.navGreenMat.emissiveIntensity = navPhase > 0 ? 2.4 : 0.15;
+          dronePlaceholder.leds.navRedMat.emissiveIntensity = navPhase > 0 ? 0.15 : 2.4;
+          dronePlaceholder.leds.strobeMat.emissiveIntensity = Math.sin(state.time * 7) > 0.2 ? 2.6 : 0.15;
         }
 
         if (type === "squid" && !squidModel) {
@@ -1056,34 +2189,114 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
 
       // Hero is intentionally cinematic, but the robot motion still comes
       // from the same demo telemetry instead of a separate fake animation.
+      flockGroup.visible = hero;
+      ugvGroup.visible = hero;
+      hexapodGroup.visible = hero;
+      if (!hero) {
+        interceptorGroup.visible = false;
+        interceptorBeaconLight.intensity = 0;
+      }
       if (hero) {
-        const demo = FALLBACK_MISSIONS[0];
-        const heroDrone = interpolateTelemetry(demo.telemetry, (now / 1000) % demo.duration);
-        if (heroDrone) {
-          const model = droneModel ?? droneGroup;
-          model.visible = !squidModel;
-          setModelTransform(model, heroDrone);
-          if (!droneModel) {
-            dronePlaceholder.props.forEach((prop, i) => {
-              prop.rotation.y += 28 * dt * (i % 2 === 0 ? 1 : -1);
-            });
-          }
-        }
+        const t = now / 1000;
+        const yAxis = new THREE.Vector3(0, 1, 0);
 
-        const squidDemo = interpolateTelemetry(FALLBACK_MISSIONS[1].telemetry, (now / 1000) % 18);
-        if (squidDemo) {
-          const model = squidModel ?? squidGroup;
-          model.visible = true;
-          setModelTransform(model, squidDemo);
-        }
+        // Non-repeating serpentine that sweeps toward the camera (z grows
+        // toward +pointing at the viewer) and passes through it, then swings
+        // back for another pass.
+        const flyAt = (u: number) => {
+          const x = 15 + Math.sin(u * 0.63) * 30;
+          const z = -38 + 78 * (0.5 + 0.5 * Math.cos(u * 0.41));
+          const y = 7.5 + Math.sin(u * 1.31) * 3.4;
+          const dx = Math.cos(u * 0.63) * 30 * 0.63;
+          const dz = -78 * 0.5 * 0.41 * Math.sin(u * 0.41);
+          return { x, z, y, heading: Math.atan2(dx, dz), dx, dz };
+        };
+
+        const flock = flyAt(t);
+        const center = new THREE.Vector3(flock.x, flock.y, flock.z);
+
+        flockUnits.forEach((unit, i) => {
+          const offset = unit.offset.clone().applyAxisAngle(yAxis, flock.heading);
+          unit.group.position
+            .set(flock.x, flock.y + Math.sin(t * 2.2 + i * 1.3) * 0.22, flock.z)
+            .add(offset);
+          // Bank into the turn (roll about the nose axis) so the drones look
+          // like they're hauling around the corner at speed.
+          const bank = 0.34 + 0.28 * Math.sin(t * 1.6 + i * 0.9);
+          unit.group.rotation.set(0, flock.heading, bank, "YXZ");
+          unit.group.visible = true;
+          const spin = 60 * dt * (i % 2 === 0 ? 1 : -1);
+          unit.props.forEach((prop, j) => {
+            prop.rotation.y += spin * (j % 2 === 0 ? 1 : -1);
+          });
+          // Blinking nav lights: red (port) and green (starboard) alternate,
+          // plus a white anti-collision strobe.
+          const navPhase = Math.sin(t * 4 + i * 0.7);
+          unit.leds.navGreenMat.emissiveIntensity = navPhase > 0 ? 2.4 : 0.15;
+          unit.leds.navRedMat.emissiveIntensity = navPhase > 0 ? 0.15 : 2.4;
+          unit.leds.strobeMat.emissiveIntensity = Math.sin(t * 7 + i) > 0.2 ? 2.6 : 0.15;
+        });
+
+        // Interceptor: launches from the pad, then chases the same flypast
+        // slightly behind and offset above/sideways — it flows past the camera
+        // right behind the herd but never hits them.
+        const CHASE_START = 0.3;
+        const launch = THREE.MathUtils.smoothstep(t, CHASE_START, CHASE_START + 2.2);
+        const chase = flyAt(Math.max(t - 1.1, 0));
+        const inv = 1 / (Math.hypot(chase.dx, chase.dz) || 1);
+        const nx = -chase.dz * inv;
+        const nz = chase.dx * inv;
+        const chasePos = new THREE.Vector3(
+          chase.x + nx * 3.4,
+          chase.y + 1.2 + Math.sin(t * 1.1) * 0.5,
+          chase.z + nz * 3.4
+        );
+        const start = new THREE.Vector3(11, terrainHeight(11, 17) + 0.4, 17);
+        const pos = start.clone().lerp(chasePos, launch);
+        interceptorGroup.visible = true;
+        interceptorGroup.position.copy(pos);
+        const look = pos.clone().lerp(center, 0.3);
+        interceptorGroup.lookAt(look);
+
+        // Blinking red beacon on the interceptor.
+        const beacon = Math.sin(t * 9) > 0;
+        interceptorBeaconMat.emissiveIntensity = beacon ? 3 : 0.25;
+        interceptorBeaconGlow.material.opacity = beacon ? 0.95 : 0.25;
+        interceptorBeaconLight.intensity = beacon ? 5 : 0.5;
+
+        // Walking hexapod patrols a small loop with a tripod gait.
+        const hx = Math.cos(t * 0.16 + 2) * 10;
+        const hz = Math.sin(t * 0.16 + 2) * 10;
+        const hHeading = Math.atan2(-Math.sin(t * 0.16 + 2), Math.cos(t * 0.16 + 2));
+        hexapodGroup.position.set(hx, terrainHeight(hx, hz), hz);
+        hexapodGroup.rotation.y = hHeading;
+        const gait = t * 5;
+        hexapod.legs.forEach((leg, i) => {
+          const ph = gait + (i % 2 === 0 ? 0 : Math.PI);
+          const swing = Math.sin(ph);
+          const lift = Math.max(0, Math.sin(ph));
+          leg.hip.rotation.y = 0.32 * swing;
+          leg.femur.rotation.z = leg.side * (0.14 + 0.3 * lift);
+          leg.tibia.rotation.z = leg.side * (-0.22 - 0.16 * lift);
+        });
+
+        // UGV drives a wide patrol loop around the field.
+        const ugvOmega = 0.12;
+        const ugvRadius = 19;
+        const ux = Math.cos(t * ugvOmega) * ugvRadius;
+        const uz = Math.sin(t * ugvOmega + 0.6) * ugvRadius * 0.8;
+        const ugvHeading = Math.atan2(-Math.sin(t * ugvOmega) * ugvRadius, Math.cos(t * ugvOmega + 0.6) * ugvRadius * 0.8);
+        ugvGroup.position.set(ux, terrainHeight(ux, uz), uz);
+        ugvGroup.rotation.y = ugvHeading;
+        ugv.wheels.forEach((wheel) => (wheel.rotation.x += dt * 5));
       }
 
       const targetPosition = new THREE.Vector3();
       const desiredCamera = new THREE.Vector3();
 
       if (hero) {
-        desiredCamera.set(14, 6.8, 22);
-        targetPosition.set(3, 1.5, -3);
+        desiredCamera.set(16, 9, 25);
+        targetPosition.set(0, 4.5, 0);
       } else if (state.appState === "MISSION_CONTROL") {
         desiredCamera.set(0, 13, 28);
         targetPosition.set(0, 1, 0);
@@ -1107,7 +2320,7 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
 
       cloudGroup.rotation.y += dt * 0.002;
 
-      renderer.render(scene, camera);
+      composer.render();
     };
 
     animate(performance.now());
@@ -1125,6 +2338,12 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
 
       disposeObject(sky);
       disposeObject(cloudGroup);
+      disposeObject(stars);
+      disposeObject(trees.group);
+      disposeObject(flockGroup);
+      disposeObject(ugvGroup);
+      disposeObject(interceptorGroup);
+      disposeObject(hexapodGroup);
       disposeObject(droneGroup);
       disposeObject(squidGroup);
       disposeObject(roverGroup);
@@ -1132,6 +2351,7 @@ function RoboticsScene({ appState, mission, time, engineeringMode }: SceneProps)
       if (squidModel) disposeObject(squidModel);
       if (roverModel) disposeObject(roverModel);
 
+      composer.dispose();
       renderer.dispose();
       renderer.forceContextLoss?.();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
@@ -1165,11 +2385,11 @@ function formatValue(value: number | undefined, unit = "") {
   return value === undefined || Number.isNaN(value) ? "—" : `${value.toFixed(2)}${unit}`;
 }
 
-function getProject(mission: ReturnType<typeof makeMission> | null) {
+export function getProject(mission: ReturnType<typeof makeMission> | null) {
   return mission ? PROJECTS.find((project) => project.id === mission.projectId) ?? null : null;
 }
 
-function MissionSelector({
+export function MissionSelector({
   missions,
   selectedMission,
   onSelect,
@@ -1208,7 +2428,7 @@ function MissionSelector({
   );
 }
 
-function TelemetryPanel({
+export function TelemetryPanel({
   mission,
   sample,
   time,
@@ -1266,7 +2486,7 @@ function EngineeringLegend() {
   );
 }
 
-function FlightRecorder({
+export function FlightRecorder({
   mission,
   time,
   setTime,
@@ -1335,7 +2555,7 @@ function FlightRecorder({
   );
 }
 
-function ProjectCaseStudy({
+export function ProjectCaseStudy({
   project,
   mission,
   onClose,
@@ -1361,7 +2581,7 @@ function ProjectCaseStudy({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
-      className="absolute inset-0 z-40 overflow-y-auto bg-slate-950/96 p-4 font-sans backdrop-blur-xl sm:p-8 lg:p-14"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/96 p-4 font-sans backdrop-blur-xl sm:p-8 lg:p-14"
     >
       <div className="mx-auto max-w-6xl rounded-2xl border border-slate-800 bg-slate-900/90 shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800 bg-slate-900/95 p-4 backdrop-blur sm:p-6">
@@ -1426,6 +2646,16 @@ function ProjectCaseStudy({
                   <Github size={17} /> GitHub
                 </a>
               )}
+              {project.links?.thingiverse && (
+                <a
+                  href={project.links.thingiverse}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mb-2 flex items-center justify-center gap-2 rounded-lg bg-slate-800 px-4 py-3 text-sm font-bold text-white hover:bg-slate-700"
+                >
+                  <Box size={17} /> Thingiverse
+                </a>
+              )}
               {project.links?.docs && (
                 <a href={project.links.docs} target="_blank" rel="noreferrer" className="mb-2 block rounded-lg bg-slate-800 px-4 py-3 text-center text-sm font-bold text-white">
                   Documentation
@@ -1442,7 +2672,7 @@ function ProjectCaseStudy({
                 </a>
               )}
 
-              {!project.links?.github && !project.links?.docs && !project.links?.video && !project.links?.report && (
+              {!project.links?.github && !project.links?.thingiverse && !project.links?.docs && !project.links?.video && !project.links?.report && (
                 <div className="text-xs leading-5 text-slate-500">No project links supplied.</div>
               )}
             </div>
@@ -1480,7 +2710,7 @@ function App() {
         FALLBACK_MISSIONS.map(async (fallback, index) => {
           const fileName = `${fallback.projectId}.json`;
           try {
-            const response = await fetch(`/data/${fileName}`, { cache: "no-store" });
+            const response = await fetch(assetUrl(`data/${fileName}`), { cache: "no-store" });
             if (!response.ok) return fallback;
             const json = (await response.json()) as Partial<MissionData>;
 

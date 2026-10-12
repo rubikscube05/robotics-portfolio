@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+html {
+  /* Global 80% scale so more of the interface fits on screen. */
+  font-size: 80%;
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow-x: hidden;
+  background: #050505;
+}
