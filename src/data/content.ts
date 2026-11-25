@@ -340,11 +340,11 @@ export const projects: Project[] = [
   {
     id: "gps-denied",
     title: "GPS-Denied Drone Fleet",
-    context: "Robofest · Aerial Robotics IITK",
+    context: "Robofest 5.0 · Aerial Robotics IITK",
     category: "Multi-robot autonomy",
     period: "2026",
     summary:
-      "Robofest entry: a one-command Gazebo simulation of three ArduPilot drones navigating with GPS disabled, and the competition drone taken from CAD to hardware.",
+      "Robofest 5.0 entry: a one-command Gazebo simulation of three ArduPilot drones navigating with GPS disabled, and the competition drone taken from CAD to hardware.",
     problem: "Test multi-agent navigation and coordination without satellite positioning.",
     role: "Built the simulation and launch stack.",
     approach:
