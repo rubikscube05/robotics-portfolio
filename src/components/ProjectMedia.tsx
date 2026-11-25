@@ -42,7 +42,7 @@ export function ProjectMedia({ media, eager = false }: { media: Media; eager?: b
   if (media.kind === "image") {
     return (
       <img
-        className="media media--image"
+        className={`media media--image ${media.fit === "cover" ? "media--cover" : ""}`.trim()}
         src={media.src}
         alt={media.alt}
         loading={eager ? "eager" : "lazy"}

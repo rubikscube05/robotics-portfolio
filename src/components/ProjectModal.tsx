@@ -82,9 +82,22 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
           </button>
         </header>
 
-        <div className="dialog__media">
-          <ProjectMedia media={project.media} eager />
-        </div>
+        {project.gallery?.length ? null : (
+          <div className="dialog__media">
+            <ProjectMedia media={project.media} eager />
+          </div>
+        )}
+
+        {project.gallery?.length ? (
+          <div className="gallery">
+            {project.gallery.map((item) => (
+              <figure key={item.src}>
+                <img src={item.src} alt={item.alt} loading="lazy" decoding="async" />
+                <figcaption>{item.caption}</figcaption>
+              </figure>
+            ))}
+          </div>
+        ) : null}
 
         <dl className="specs specs--dialog">
           {project.specs.map((spec) => (

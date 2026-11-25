@@ -19,7 +19,7 @@ export type SchematicVariant =
 
 export type ProjectMedia =
   | { kind: "video"; src: string; poster: string; alt: string }
-  | { kind: "image"; src: string; alt: string }
+  | { kind: "image"; src: string; alt: string; fit?: "cover" | "contain" }
   | { kind: "schematic"; variant: SchematicVariant; alt: string };
 
 export type ProjectLinks = {
@@ -45,6 +45,8 @@ export type Project = {
   tags: string[];
   links: ProjectLinks;
   media: ProjectMedia;
+  /** Extra photos shown in the case study. */
+  gallery?: { src: string; alt: string; caption: string }[];
   featured: boolean;
 };
 
@@ -174,9 +176,10 @@ export const projects: Project[] = [
       github: "https://github.com/rubikscube05/IRoC-U-26-precision-landing",
     },
     media: {
-      kind: "schematic",
-      variant: "landing",
-      alt: "Diagram of a quadrotor descending onto an ArUco landing marker",
+      kind: "image",
+      src: media("iroc-drone.jpg"),
+      alt: "IRoC-U quadrotor in the lab: F450 frame with a ZED stereo camera mounted under the body",
+      fit: "cover",
     },
     featured: true,
   },
@@ -337,11 +340,11 @@ export const projects: Project[] = [
   {
     id: "gps-denied",
     title: "GPS-Denied Drone Fleet",
-    context: "Multi-agent simulation",
+    context: "Robofest · Aerial Robotics IITK",
     category: "Multi-robot autonomy",
     period: "2026",
     summary:
-      "One-command Gazebo simulation of three ArduPilot drones navigating with GPS disabled, using onboard cameras and a wireless-mesh topology.",
+      "Robofest entry: a one-command Gazebo simulation of three ArduPilot drones navigating with GPS disabled, and the competition drone taken from CAD to hardware.",
     problem: "Test multi-agent navigation and coordination without satellite positioning.",
     role: "Built the simulation and launch stack.",
     approach:
@@ -352,10 +355,23 @@ export const projects: Project[] = [
     tags: ["ROS 2", "ArduPilot", "Multi-agent"],
     links: { github: "https://github.com/rubikscube05/GPS-denied" },
     media: {
-      kind: "schematic",
-      variant: "swarm",
-      alt: "Diagram of three drones linked by a mesh network",
+      kind: "image",
+      src: media("robofest-drone.jpg"),
+      alt: "Robofest drone from above: compact frame with a LiDAR unit, Raspberry Pi, and GPS module",
+      fit: "cover",
     },
+    gallery: [
+      {
+        src: media("robofest-cad.jpg"),
+        alt: "CAD render of the Robofest drone with a top-mounted LiDAR and tall landing legs",
+        caption: "CAD model",
+      },
+      {
+        src: media("robofest-drone.jpg"),
+        alt: "Built Robofest drone photographed from above",
+        caption: "Built hardware",
+      },
+    ],
     featured: false,
   },
   {
