@@ -12,9 +12,9 @@ export function FeaturedWork({ onOpen }: Props) {
   return (
     <section className="section" id="work" aria-labelledby="work-title">
       <div className="shell">
-        <SectionHeader id="work-title" label="Selected work" title="Four systems, perception to actuation.">
+        <SectionHeader id="work-title" label="Selected work" title="Five systems, perception to actuation.">
           <p>
-            Two competitions, a space-robotics internship, and a robot-learning project, validated
+            Three competitions, a space-robotics internship, and a robot-learning project, validated
             in simulation and, where it counts, on hardware.
           </p>
         </SectionHeader>

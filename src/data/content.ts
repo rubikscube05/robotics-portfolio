@@ -184,6 +184,58 @@ export const projects: Project[] = [
     featured: true,
   },
   {
+    id: "robofest-swarm",
+    title: "Multi-UAV Swarm",
+    context: "RoboFest 5.0 · Aerial Robotics IITK",
+    category: "Multi-robot systems · hardware",
+    period: "Oct 2025 – Mar 2026",
+    summary:
+      "A decentralized drone swarm with leader-follower coordination over a wireless mesh and Micro XRCE-DDS, flown on custom CNC-cut airframes with Raspberry Pi compute and an SDR-based subsurface detection pipeline.",
+    problem:
+      "Coordinate several drones without a central controller, on airframes the team builds itself, while carrying a payload that detects what lies below the surface.",
+    role:
+      "Built the decentralized coordination stack, fabricated the airframes, integrated compute, power, and the SDR detection pipeline, and implemented the 2D MINCO trajectory optimizer.",
+    approach:
+      "Each drone runs ROS 2, with Micro XRCE-DDS carrying messages over a wireless mesh for low-latency leader-follower coordination. Airframes were designed within CNC manufacturing limits and carry Raspberry Pi compute and Li-ion power. Paths come from a 2D MINCO trajectory optimizer in C++, where optimizing LAPACK calls cut memory overhead by 33%. A software-defined radio pipeline handles subsurface detection. The fleet was first brought up in a Gazebo simulation of three ArduPilot drones with GPS disabled.",
+    result:
+      "Custom airframes built and integrated with decentralized leader-follower coordination, and a 33% reduction in planner memory overhead.",
+    pipeline: [
+      "CAD → CNC-cut airframe",
+      "Raspberry Pi + Li-ion power",
+      "ROS 2 + Micro XRCE-DDS",
+      "Wireless mesh · leader-follower",
+      "2D MINCO trajectories · C++",
+      "SDR subsurface detection",
+    ],
+    specs: [
+      { value: "33", unit: "%", label: "Less planner memory" },
+      { value: "Mesh", label: "Decentralized, leader-follower" },
+      { value: "CNC", label: "Custom airframes" },
+      { value: "SDR", label: "Subsurface detection" },
+    ],
+    tags: ["ROS 2", "C++", "Micro XRCE-DDS", "MINCO", "Raspberry Pi", "SDR"],
+    links: { github: "https://github.com/rubikscube05/GPS-denied" },
+    media: {
+      kind: "image",
+      src: media("robofest-drone.jpg"),
+      alt: "RoboFest 5.0 drone from above: custom frame with a LiDAR unit, Raspberry Pi, and GPS module",
+      fit: "cover",
+    },
+    gallery: [
+      {
+        src: media("robofest-cad.jpg"),
+        alt: "CAD render of the RoboFest 5.0 drone with a top-mounted LiDAR and tall landing legs",
+        caption: "CAD model",
+      },
+      {
+        src: media("robofest-drone.jpg"),
+        alt: "Built RoboFest 5.0 drone photographed from above",
+        caption: "Built hardware",
+      },
+    ],
+    featured: true,
+  },
+  {
     id: "iron-squid",
     title: "IRON-SQUID",
     context: "Independent · MuJoCo + ROS 2",
@@ -338,43 +390,6 @@ export const projects: Project[] = [
     featured: false,
   },
   {
-    id: "gps-denied",
-    title: "GPS-Denied Drone Fleet",
-    context: "Robofest 5.0 · Aerial Robotics IITK",
-    category: "Multi-robot autonomy",
-    period: "2026",
-    summary:
-      "Robofest 5.0 entry: a one-command Gazebo simulation of three ArduPilot drones navigating with GPS disabled, and the competition drone taken from CAD to hardware.",
-    problem: "Test multi-agent navigation and coordination without satellite positioning.",
-    role: "Built the simulation and launch stack.",
-    approach:
-      "Three SITL vehicles with GPS disabled, per-vehicle MAVROS, ROS–Gazebo bridges, and a mesh topology for inter-agent messaging, on ROS 2 Jazzy.",
-    result: "The fleet boots from a single script into a GPS-denied world.",
-    pipeline: ["Camera models", "3 × ArduPilot SITL", "Per-vehicle MAVROS", "Mesh communication"],
-    specs: [{ value: "3", unit: "UAVs", label: "SITL fleet" }],
-    tags: ["ROS 2", "ArduPilot", "Multi-agent"],
-    links: { github: "https://github.com/rubikscube05/GPS-denied" },
-    media: {
-      kind: "image",
-      src: media("robofest-drone.jpg"),
-      alt: "Robofest drone from above: compact frame with a LiDAR unit, Raspberry Pi, and GPS module",
-      fit: "cover",
-    },
-    gallery: [
-      {
-        src: media("robofest-cad.jpg"),
-        alt: "CAD render of the Robofest drone with a top-mounted LiDAR and tall landing legs",
-        caption: "CAD model",
-      },
-      {
-        src: media("robofest-drone.jpg"),
-        alt: "Built Robofest drone photographed from above",
-        caption: "Built hardware",
-      },
-    ],
-    featured: false,
-  },
-  {
     id: "robot-designer",
     title: "Robot Designer",
     context: "Independent · live tool",
@@ -403,18 +418,18 @@ export const projects: Project[] = [
   {
     id: "minco-trajectory-planner",
     title: "MINCO Trajectory Planner",
-    context: "Aerial Robotics IITK",
+    context: "RoboFest 5.0 · Aerial Robotics IITK",
     category: "Motion planning",
-    period: "2026",
+    period: "2025 – 2026",
     summary:
-      "C++ planner that generates smooth, dynamically feasible quadrotor trajectories through polynomial optimization for agile flight.",
+      "C++ planner that generates smooth, dynamically feasible trajectories through polynomial optimization. I implemented the 2D version for the RoboFest swarm and cut its memory overhead by 33%.",
     problem: "Generate time-efficient, smooth trajectories that respect quadrotor dynamics.",
-    role: "Worked on the team's C++ planner codebase.",
-    approach: "C++, MINCO polynomial optimization, Eigen, ROS 2, OctoMap, OMPL.",
-    result: "[ADD: your benchmark, demo, or measurable result.]",
+    role: "Implemented 2D MINCO trajectory optimization for the RoboFest 5.0 swarm in the team's C++ planner.",
+    approach: "C++, MINCO polynomial optimization, Eigen, LAPACK, ROS 2.",
+    result: "Cut memory overhead by 33% by optimizing LAPACK calls.",
     pipeline: ["Waypoints", "Collision checking", "MINCO optimization", "Feasible trajectory"],
-    specs: [{ value: "C++", label: "Eigen · ROS 2" }],
-    tags: ["C++", "MINCO", "Eigen"],
+    specs: [{ value: "33", unit: "%", label: "Less memory" }],
+    tags: ["C++", "MINCO", "LAPACK"],
     links: {
       github: "https://github.com/rubikscube05/minco-trajectory-planner",
       upstream: "https://github.com/AerialRobotics-IITK/minco-trajectory-planner",
@@ -556,6 +571,7 @@ export const about = {
 /** Competitions, programmes, and organisations from the résumé (names only, no logos). */
 export const proof = [
   "ISRO IRoC-U",
+  "RoboFest 5.0",
   "IMAV 2025",
   "Inter IIT 14.0",
   "DREAM Aerospace",
