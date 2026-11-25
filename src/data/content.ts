@@ -419,7 +419,7 @@ export const projects: Project[] = [
   },
   {
     id: "long-range-uav",
-    title: "Foldable Long-Range UAV",
+    title: "Intelligent Long-Distance UAV",
     context: "Hardware design · open model on Thingiverse",
     category: "UAV hardware design",
     period: "2026",
@@ -443,9 +443,9 @@ export const projects: Project[] = [
     tags: ["CAD", "3D printing", "RTK GPS", "LiDAR"],
     links: { model: "https://www.thingiverse.com/thing:7344739" },
     media: {
-      kind: "schematic",
-      variant: "uav",
-      alt: "Top-view line drawing of a foldable quadrotor frame",
+      kind: "image",
+      src: media("long-range-uav.jpg"),
+      alt: "Render of the Intelligent Long-Distance UAV folding its arms in flight, titled Intelligent Long-Distance UAVs",
     },
     featured: false,
   },
