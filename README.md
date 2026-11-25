@@ -1,81 +1,103 @@
-# Robotics Mission Control — updated implementation
+# Vaibhav Vishwakarma — Robotics Portfolio
 
-## Install
+A fast, single-page robotics portfolio: an interactive robot-arm hero, four featured systems with real footage and spec figures, a grid of smaller projects, and case-study dialogs. Light and dark themes follow the visitor's system setting.
+
+## Stack
+
+- Vite + React 19 + TypeScript
+- Tailwind CSS v4 (design tokens and custom components live in `src/index.css`)
+- Lucide React icons
+- Self-hosted Inter and JetBrains Mono fonts
+- Canvas 2D trajectory visualisation, no 3D runtime
+- GitHub Actions for Pages deployment, plus a Vercel config
+
+No analytics, cookies, or third-party tracking scripts.
+
+## Run locally
 
 ```bash
-npm install three framer-motion lucide-react
+npm install
+npm run dev
 ```
 
-If this is a Vite React TypeScript project, the normal React/Vite dependencies should already be present.
+```bash
+npm run build      # typecheck + production build
+npm run preview    # preview the production build
+npm run typecheck  # TypeScript only
+```
 
-## Use
+## Deployment
 
-Replace the existing mission-control component with:
+### GitHub Pages
 
-`src/robotics_mission_control.tsx`
+The workflow at `.github/workflows/deploy.yml` builds and deploys on pushes to `main`.
 
-Then render `<App />` from your existing app entry point.
+1. Push the repository to GitHub.
+2. In repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions**.
+3. Push to `main` or run the workflow manually.
 
-## Assets
+`vite.config.ts` sets the base path to `/<repository-name>/` automatically when `GITHUB_ACTIONS=true`. The expected URL is:
 
-Put actual models here:
+`https://rubikscube05.github.io/robotics-portfolio/`
+
+If you use a custom domain or Vercel, update the canonical/OG URLs in `index.html`, `src/data/content.ts` (`siteMeta`), `public/sitemap.xml`, and `public/robots.txt`.
+
+### Vercel
+
+Import the repository and use the included `vercel.json`. Build command: `npm run build`; output: `dist`.
+
+## Editing content
+
+All copy and links are in `src/data/content.ts`. Keep the following rules:
+
+- Do not invent achievements, metrics, employers, dates, or awards.
+- Leave unknown facts as `[ADD: ...]` placeholders; see `CONTENT_TODO.md`.
+- Project case studies follow **Problem → My role → Approach & tech → Result → Links**.
+- Prefer outcomes and evidence over buzzwords. Keep card copy to 3–5 lines.
+- Replace `public/resume.pdf` with the real résumé before publishing.
+- Project media slots accept a real image URL via `mediaUrl`; otherwise the built-in line-art placeholder is shown.
+
+## Project structure
 
 ```text
-public/models/drone.glb
-public/models/squid.glb
-public/models/rover.glb
+src/
+  App.tsx                  page composition and modal state
+  data/content.ts          person, projects, specs, skills, timeline
+  components/
+    Header.tsx             sticky nav, mobile menu, theme toggle
+    Hero.tsx               name, intro, CTAs, proof strip
+    ArmCanvas.tsx          interactive 3-DoF arm (closed-form IK, pick and place)
+    FeaturedWork.tsx       four featured systems
+    MoreWork.tsx           smaller projects grid
+    ProjectMedia.tsx       video / image / schematic media
+    Schematic.tsx          theme-aware line drawings
+    ProjectModal.tsx       native <dialog> case study
+    About.tsx              story and working principles
+    Skills.tsx             capability cards with icons
+    Background.tsx         experience timeline, honours, education
+    Contact.tsx, Footer.tsx
+    SectionHeader.tsx, RichText.tsx (hides [ADD: …] tokens)
+  hooks/
+    useTheme.ts
+    useActiveSection.ts
+  index.css                tokens, layout, responsive, reduced motion
+public/media/              self-hosted project footage and images
+public/                    favicon, OG image, manifest, robots, sitemap, résumé
 ```
 
-If a model is absent, the app uses a clearly generic engineering placeholder.
+## Accessibility and privacy
 
-Put future mission data here:
+- Semantic landmarks, one `h1`, skip link, visible focus states.
+- All interactive targets are at least 44×44 CSS px at audited widths (375, 768, 1440).
+- Native `<dialog>` handles focus trapping; focus returns to the opening card on close.
+- `prefers-reduced-motion` disables the trajectory loop and CSS entrance motion.
+- Theme preference is stored in `localStorage`; nothing is sent to a server.
+- The contact form only composes a `mailto:` link; it does not submit to a backend.
 
-```text
-public/data/autonomous-landing.json
-public/data/squid-robot.json
-public/data/gps-drone.json
-public/data/swarm-coordination.json
-public/data/gesture-drone.json
-public/data/mars-rover.json
-public/data/wall-writing-uav.json
-public/data/mine-detection-uav.json
-```
+## Verified
 
-A JSON file should contain:
-
-```json
-{
-  "robot": "UAV-01",
-  "dataSource": "real_flight",
-  "duration": 20,
-  "telemetry": [
-    {
-      "time": 0,
-      "position": [0, 0, 0],
-      "rotation": [0, 0, 0],
-      "altitude": 0,
-      "velocity": 0,
-      "heading": 0,
-      "state": "ARMED"
-    }
-  ]
-}
-```
-
-Allowed `dataSource` values:
-
-- `demo`
-- `real_flight`
-- `rosbag`
-
-The UI will not label demo data as real flight data.
-
-## Images / videos / CAD
-
-Store them under `public/media/` and add their real paths to the relevant project's `media` object.
-
-Only supplied links should be added to `links`.
-
-## Important
-
-The supplied source contained generated/example engineering claims and placeholder GitHub URLs. The updated implementation deliberately removes those claims and links rather than presenting them as verified results.
+- `npm run build` passes with TypeScript clean.
+- GitHub Pages base-path build rewrites JS, CSS, fonts, and public assets correctly.
+- Lighthouse (mobile and desktop): **100 performance, 100 accessibility, 100 best practices, 100 SEO**.
+- axe-core: **0 violations** in dark and light themes at 375/768/1440.
+- No horizontal overflow at 320/375/768/1440/1920.

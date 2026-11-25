@@ -2,23 +2,135 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
 
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-
+    <title>
+      Vaibhav Vishwakarma — Robotics Engineer | Autonomy, Control &amp;
+      Robot Learning
+    </title>
     <meta
       name="description"
-      content="Vaibhav Vishwakarma — Robotics, autonomous systems, aerial robotics and intelligent machines."
+      content="Vaibhav Vishwakarma, robotics engineer at IIT Kanpur and Team Head of Aerial Robotics IITK. Top 6 globally at ICUAS ’26, top 20 of 1000+ teams at ISRO IRoC-U. Robot learning, vision-guided manipulation, planning and control, from simulation to hardware."
+    />
+    <meta name="author" content="Vaibhav Vishwakarma" />
+    <meta name="robots" content="index, follow" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#0d1012" />
+
+    <link rel="canonical" href="https://rubikscube05.github.io/robotics-portfolio/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Vaibhav Vishwakarma — Robotics Engineer"
+    />
+    <meta
+      property="og:description"
+      content="Top 6 globally at ICUAS ’26 · Top 20 of 1000+ at ISRO IRoC-U. Robot learning, vision-guided manipulation, planning and control, SIL to HIL."
+    />
+    <meta
+      property="og:url"
+      content="https://rubikscube05.github.io/robotics-portfolio/"
+    />
+    <meta
+      property="og:image"
+      content="https://rubikscube05.github.io/robotics-portfolio/og-image.png"
+    />
+    <meta
+      property="og:image:alt"
+      content="Vaibhav Vishwakarma — robotics engineer, autonomy and control"
+    />
+    <meta property="og:site_name" content="Vaibhav Vishwakarma" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Vaibhav Vishwakarma — Robotics Engineer"
+    />
+    <meta
+      name="twitter:description"
+      content="Top 6 globally at ICUAS ’26 · Top 20 of 1000+ at ISRO IRoC-U. Robot learning, vision-guided manipulation, planning and control, SIL to HIL."
+    />
+    <meta
+      name="twitter:image"
+      content="https://rubikscube05.github.io/robotics-portfolio/og-image.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Vaibhav Vishwakarma — robotics engineer, autonomy and control"
     />
 
-    <title>Vaibhav — Robotics Portfolio</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (error) {
+          document.documentElement.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+      })();
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Vaibhav Vishwakarma",
+        "url": "https://rubikscube05.github.io/robotics-portfolio/",
+        "jobTitle": "Robotics Engineer",
+        "description": "Robotics engineer working on autonomy, control, and robot learning.",
+        "sameAs": [
+          "https://github.com/rubikscube05",
+          "https://www.linkedin.com/in/vaibhav-vishwakarma-987b0b322/"
+        ],
+        "memberOf": {
+          "@type": "Organization",
+          "name": "Aerial Robotics, IIT Kanpur"
+        },
+        "knowsAbout": [
+          "Aerial robotics",
+          "Autonomous navigation",
+          "Reinforcement learning",
+          "Robot control",
+          "MuJoCo",
+          "Motion planning",
+          "Trajectory optimization",
+          "ROS 2",
+          "ArduPilot",
+          "C++",
+          "Python"
+        ]
+      }
+    </script>
   </head>
 
   <body>
     <div id="root"></div>
-
+    <noscript>
+      <div style="padding: 32px; font-family: system-ui, sans-serif; max-width: 720px; margin: 0 auto;">
+        <h1>Vaibhav Vishwakarma</h1>
+        <p>
+          Robotics engineer at IIT Kanpur working on autonomy, control, and
+          robot learning. This portfolio uses JavaScript for its interactive
+          case studies.
+        </p>
+        <p>
+          GitHub: <a href="https://github.com/rubikscube05">github.com/rubikscube05</a><br />
+          LinkedIn: <a href="https://www.linkedin.com/in/vaibhav-vishwakarma-987b0b322/">linkedin.com/in/vaibhav-vishwakarma-987b0b322</a>
+        </p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
