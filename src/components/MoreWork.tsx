@@ -24,7 +24,7 @@ export function MoreWork({ onOpen }: Props) {
 
         <ul className="cards">
           {rest.map((project) => {
-            const external = project.links.demo;
+            const external = project.links.demo ?? project.links.model;
             return (
               <li className="card reveal" key={project.id}>
                 <button
@@ -53,7 +53,7 @@ export function MoreWork({ onOpen }: Props) {
                         target="_blank"
                         rel="noreferrer noopener"
                       >
-                        Live
+                        {project.links.demo ? "Live" : "Model"}
                         <ArrowUpRight size={14} aria-hidden="true" />
                       </a>
                     ) : null}

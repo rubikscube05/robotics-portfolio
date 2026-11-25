@@ -15,7 +15,8 @@ export type SchematicVariant =
   | "moving-platform"
   | "firmware"
   | "swarm"
-  | "planner";
+  | "planner"
+  | "uav";
 
 export type ProjectMedia =
   | { kind: "video"; src: string; poster: string; alt: string }
@@ -26,6 +27,7 @@ export type ProjectLinks = {
   github?: string;
   upstream?: string;
   demo?: string;
+  model?: string;
 };
 
 export type Project = {
@@ -416,6 +418,38 @@ export const projects: Project[] = [
     featured: false,
   },
   {
+    id: "long-range-uav",
+    title: "Foldable Long-Range UAV",
+    context: "Hardware design · open model on Thingiverse",
+    category: "UAV hardware design",
+    period: "2026",
+    summary:
+      "A 3D-printable, backpack-portable UAV frame built around RTK GPS, 360° LiDAR, and ToF sensing, with high-tension arm locks that damp frame resonance.",
+    problem:
+      "Combine centimetre-level RTK positioning, LiDAR obstacle avoidance, and GPS-denied SLAM on a frame that folds small enough to carry in a backpack.",
+    role: "Designed the frame and selected the avionics, sensors, and power system.",
+    approach:
+      "A foldable frame with high-tension arm locking to damp resonance carries an H7-class flight controller (ArduPilot or PX4), an M10 RTK GPS for centimetre accuracy, a 360° 2D LiDAR (LD19 / RPLIDAR class) and ToF sensors for obstacle avoidance and SLAM, and a 4S2P Li-ion pack. PID loops are tuned for the added inertia of the battery and LiDAR payload.",
+    result: "Published as an open, printable model on Thingiverse.",
+    pipeline: [
+      "Foldable printed frame · arm locks",
+      "H7 flight controller",
+      "M10 RTK GPS",
+      "360° LiDAR + ToF",
+      "SLAM for GPS-denied flight",
+      "4S2P Li-ion power",
+    ],
+    specs: [{ value: "4S2P", label: "Li-ion pack" }],
+    tags: ["CAD", "3D printing", "RTK GPS", "LiDAR"],
+    links: { model: "https://www.thingiverse.com/thing:7344739" },
+    media: {
+      kind: "schematic",
+      variant: "uav",
+      alt: "Top-view line drawing of a foldable quadrotor frame",
+    },
+    featured: false,
+  },
+  {
     id: "minco-trajectory-planner",
     title: "MINCO Trajectory Planner",
     context: "RoboFest 5.0 · Aerial Robotics IITK",
@@ -557,6 +591,12 @@ export const education = {
 
 export const about = {
   title: "From a simulation to a robot that works on the bench.",
+  video: {
+    src: media("takeoff.mp4"),
+    poster: media("takeoff-poster.jpg"),
+    alt: "A red quadrotor lifting off from a runway and climbing during an outdoor test flight",
+    caption: "Takeoff during an outdoor test flight",
+  },
   paragraphs: [
     "I study at IIT Kanpur and lead Aerial Robotics IITK, a 35-person team building autonomous drones for international competitions. Most of what I know came from making things fly, land, and dock without a pilot, and from finding out where they fail.",
     "I like owning the whole loop: the model in simulation, the perception that feeds it, the controller that acts on it, and the firmware and wiring underneath. Then I take it to hardware and measure what actually happens.",

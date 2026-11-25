@@ -48,6 +48,7 @@ export function Schematic({ variant, label }: { variant: SchematicVariant; label
       {variant === "firmware" ? <Firmware /> : null}
       {variant === "swarm" ? <Swarm /> : null}
       {variant === "planner" ? <Planner /> : null}
+      {variant === "uav" ? <Uav /> : null}
     </svg>
   );
 }
@@ -227,6 +228,34 @@ function Firmware() {
       <rect className="sch-ink" x="150" y="172" width="100" height="36" />
       <text className="sch-label" x="200" y="194" textAnchor="middle">IMU · Kalman</text>
       <text className="sch-label" x="24" y="72">ESP32 · 1–4 kHz loop</text>
+    </g>
+  );
+}
+
+function Uav() {
+  return (
+    <g>
+      <rect className="sch-ink" x="170" y="94" width="60" height="60" rx="6" />
+      <circle className="sch-accent" cx="200" cy="124" r="12" />
+      {[
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ].map(([dx, dy], i) => {
+        const ex = 200 + dx * 92;
+        const ey = 124 + dy * 70;
+        return (
+          <g key={i}>
+            <path className="sch-ink sch-thick" d={`M${200 + dx * 30} ${124 + dy * 30}L${ex} ${ey}`} />
+            <circle className="sch-ink" cx={ex} cy={ey} r="30" />
+            <circle className="sch-solid" cx={ex} cy={ey} r="5" />
+          </g>
+        );
+      })}
+      <text className="sch-label" x="200" y="250" textAnchor="middle">
+        foldable arms · RTK · 360° LiDAR · ToF
+      </text>
     </g>
   );
 }

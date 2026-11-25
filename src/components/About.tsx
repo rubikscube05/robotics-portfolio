@@ -1,4 +1,5 @@
 import { about } from "../data/content";
+import { ProjectMedia } from "./ProjectMedia";
 
 export function About() {
   return (
@@ -11,6 +12,18 @@ export function About() {
             <p key={text.slice(0, 24)}>{text}</p>
           ))}
         </div>
+
+        <figure className="about__video reveal">
+          <ProjectMedia
+            media={{
+              kind: "video",
+              src: about.video.src,
+              poster: about.video.poster,
+              alt: about.video.alt,
+            }}
+          />
+          <figcaption>{about.video.caption}</figcaption>
+        </figure>
 
         <ol className="principles">
           {about.principles.map((item, index) => (

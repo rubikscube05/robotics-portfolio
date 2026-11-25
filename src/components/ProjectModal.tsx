@@ -50,6 +50,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
       icon: false,
     },
     project.links.demo && { href: project.links.demo, label: "Live demo", icon: false },
+    project.links.model && { href: project.links.model, label: "Model on Thingiverse", icon: false },
   ].filter(Boolean) as { href: string; label: string; icon: boolean }[];
 
   return createPortal(
