@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rubikscube05.github.io/robotics-portfolio/sitemap.xml
