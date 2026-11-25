@@ -92,9 +92,9 @@ export const contact = {
 
 /** Hero proof strip. Every figure comes from the résumé. */
 export const heroStats: Spec[] = [
-  { value: "Top 6", label: "Globally at the ICUAS ’26 finals, Corfu" },
   { value: "Top 20", label: "Of 1000+ teams, ISRO IRoC-U 2026" },
   { value: "100", unit: "%", label: "Vision-guided landing success, IRoC-U" },
+  { value: "44/45", label: "Moving-platform landings, IMAV 2025" },
   { value: "35", unit: "people", label: "Team I lead at Aerial Robotics IITK" },
 ];
 
@@ -475,7 +475,6 @@ export const experience: ExperienceItem[] = [
     points: [
       "Lead a 35-member team across autonomy, perception, controls, electronics, and mechanical design.",
       "Manage a budget above INR 5 lakh and hardware above INR 25 lakh, with a fleet of 5+ multirotors for sim-to-real validation.",
-      "Pitched and secured INR 5 lakh in institutional funding for the ICUAS ’26 global finals in Corfu, Greece, where the team placed top 6 globally.",
     ],
   },
   {
@@ -513,7 +512,7 @@ export const experience: ExperienceItem[] = [
 ];
 
 export const honors: Honor[] = [
-  { value: "Top 6", label: "ICUAS ’26", detail: "Global finals, Corfu, Greece" },
+  { value: "44/45", label: "IMAV 2025", detail: "Landings on a moving platform" },
   { value: "Top 20", label: "ISRO IRoC-U 2026", detail: "Of 1000+ teams" },
   { value: "2", label: "ArduPilot PRs", detail: "Merged upstream" },
 ];
@@ -541,7 +540,6 @@ export const about = {
 /** Competitions, programmes, and organisations from the résumé (names only, no logos). */
 export const proof = [
   "ISRO IRoC-U",
-  "ICUAS ’26",
   "IMAV 2025",
   "Inter IIT 14.0",
   "DREAM Aerospace",
